@@ -7,12 +7,30 @@ use serde::{Serialize, Deserialize};
 
 /////////////////////////////////////////// Utils
 
+/// Builds the reqwest URL from a base url (a.k.a host) and the required path
+/// It may fail if either host or path are not valid.
+///
+/// # Arguments
+///
+/// * `host` - Base URL to send the request to
+/// * `path` - The path required to be called
+///
+/// # Examples
+///
+/// ```
+/// let base_url: String = "http://localhost:8000";
+/// let actual_url = build_headless_url(base_url, "/path/to/api")/
+/// ```
 fn build_headless_url(host: String, path: &str) -> Result<Url, Box<dyn std::error::Error>> {
     let base_url = Url::parse(&host)?;
     let url = base_url.join(path)?;
     return Ok(url);
 }
 
+/// An enum to wrap the value in a multi-valued HashMap.
+/// This allows the HashMap to have string, integers and booleans as value while
+/// allowing serializing to json things like:
+/// { "address": "H123...", "value": 123, "create_mint": true }
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
 enum HashMapValue {
@@ -23,16 +41,19 @@ enum HashMapValue {
 
 /////////////////////////////////////////// handlers
 
+/// Start a wallet
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
 pub async fn handle_start(params: ParamsStart) -> Result<(), Box<dyn std::error::Error>> {
     let mut map = HashMap::new();
     map.insert("seedKey", params.seed_key);
     map.insert("wallet-id", params.wallet_id);
 
-    match params.passphrase {
-        Some(passphrase) => {
-            map.insert("passphrase", passphrase);
-        }
-        None => {}
+    if let Some(passphrase) = params.passphrase {
+        map.insert("passphrase", passphrase);
     }
 
     let url = build_headless_url(params.config.host, "/start")?;
@@ -49,6 +70,12 @@ pub async fn handle_start(params: ParamsStart) -> Result<(), Box<dyn std::error:
     Ok(())
 }
 
+/// Get the configuration string of a token
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
 pub async fn handle_configuration_string(params: ParamsConfigString) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(params.config.host, "/configuration-string")?;
 
@@ -64,15 +91,18 @@ pub async fn handle_configuration_string(params: ParamsConfigString) -> Result<(
     Ok(())
 }
 
+/// Get the multisig xpubkey of the configured seed
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
 pub async fn handle_multisig_pubkey(params: ParamsMultisigPubkey) -> Result<(), Box<dyn std::error::Error>> {
     let mut map = HashMap::new();
     map.insert("seedKey", params.seed_key);
 
-    match params.passphrase {
-        Some(passphrase) => {
-            map.insert("passphrase", passphrase);
-        }
-        None => {}
+    if let Some(passphrase) = params.passphrase {
+        map.insert("passphrase", passphrase);
     }
 
     let url = build_headless_url(params.config.host, "/multisig-pubkey")?;
@@ -89,6 +119,13 @@ pub async fn handle_multisig_pubkey(params: ParamsMultisigPubkey) -> Result<(), 
     Ok(())
 }
 
+/// Get the status of a wallet
+///
+/// # Arguments
+///
+/// * `params` - Base configuration all cli calls share
+/// * `wallet_id` - which wallet to fetch the status
+///
 pub async fn handle_status(params: CliConfig, wallet_id: String) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(params.host, "/wallet/status")?;
 
@@ -104,6 +141,12 @@ pub async fn handle_status(params: CliConfig, wallet_id: String) -> Result<(), B
     Ok(())
 }
 
+/// Get balance of a token in the given wallet
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
 pub async fn handle_balance(params: ParamsWalletBalance) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(params.config.host, "/wallet/balance")?;
 
@@ -111,11 +154,8 @@ pub async fn handle_balance(params: ParamsWalletBalance) -> Result<(), Box<dyn s
         .get(url)
         .header("X-Wallet-Id", params.wallet_id);
 
-    match params.token {
-        Some(token) => {
-            req_builder = req_builder.query(&[("token", token)]);
-        }
-        None => {}
+    if let Some(token) = params.token {
+        req_builder = req_builder.query(&[("token", token)]);
     }
 
     let text_response = req_builder
@@ -128,6 +168,12 @@ pub async fn handle_balance(params: ParamsWalletBalance) -> Result<(), Box<dyn s
     Ok(())
 }
 
+/// Get current address from the given wallet
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
 pub async fn handle_address(params: ParamsWalletAddress) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(params.config.host, "/wallet/address")?;
 
@@ -135,18 +181,12 @@ pub async fn handle_address(params: ParamsWalletAddress) -> Result<(), Box<dyn s
         .get(url)
         .header("X-Wallet-Id", params.wallet_id);
 
-    match params.index {
-        Some(index) => {
-            req_builder = req_builder.query(&[("index", index)]);
-        }
-        None => {}
+    if let Some(index) = params.index {
+        req_builder = req_builder.query(&[("index", index)]);
     }
 
-    match params.mark_as_used {
-        Some(mark_as_used) => {
-            req_builder = req_builder.query(&[("mark_as_used", mark_as_used)]);
-        }
-        None => {}
+    if let Some(mark_as_used) = params.mark_as_used {
+        req_builder = req_builder.query(&[("mark_as_used", mark_as_used)]);
     }
 
     let text_response = req_builder
@@ -159,6 +199,12 @@ pub async fn handle_address(params: ParamsWalletAddress) -> Result<(), Box<dyn s
     Ok(())
 }
 
+/// Get the address info if the address belongs to the given wallet
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
 pub async fn handle_address_info(params: ParamsWalletAddressInfo) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(params.config.host, "/wallet/address-info")?;
 
@@ -167,11 +213,8 @@ pub async fn handle_address_info(params: ParamsWalletAddressInfo) -> Result<(), 
         .header("X-Wallet-Id", params.wallet_id)
         .query(&[("address", params.address)]);
 
-    match params.token {
-        Some(token) => {
-            req_builder = req_builder.query(&[("token", token)]);
-        }
-        None => {}
+    if let Some(token) = params.token {
+        req_builder = req_builder.query(&[("token", token)]);
     }
 
     let text_response = req_builder
@@ -184,6 +227,12 @@ pub async fn handle_address_info(params: ParamsWalletAddressInfo) -> Result<(), 
     Ok(())
 }
 
+/// Get the address index if the address belongs to the given wallet
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
 pub async fn handle_address_index(params: ParamsWalletAddressIndex) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(params.config.host, "/wallet/address-index")?;
 
@@ -200,6 +249,12 @@ pub async fn handle_address_index(params: ParamsWalletAddressIndex) -> Result<()
     Ok(())
 }
 
+/// Get all addresses from the given wallet
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
 pub async fn handle_addresses(params: ParamsWalletAddresses) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(params.config.host, "/wallet/addresses")?;
 
@@ -215,6 +270,12 @@ pub async fn handle_addresses(params: ParamsWalletAddresses) -> Result<(), Box<d
     Ok(())
 }
 
+/// Get the transaction history of the given wallet
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
 pub async fn handle_tx_history(params: ParamsWalletTxHistory) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(params.config.host, "/wallet/tx-history")?;
 
@@ -222,11 +283,8 @@ pub async fn handle_tx_history(params: ParamsWalletTxHistory) -> Result<(), Box<
         .get(url)
         .header("X-Wallet-Id", params.wallet_id);
 
-    match params.limit {
-        Some(limit) => {
-            req_builder = req_builder.query(&[("limit", limit)]);
-        }
-        None => {}
+    if let Some(limit) = params.limit {
+        req_builder = req_builder.query(&[("limit", limit)]);
     }
 
     let text_response = req_builder
@@ -239,6 +297,12 @@ pub async fn handle_tx_history(params: ParamsWalletTxHistory) -> Result<(), Box<
     Ok(())
 }
 
+/// Get the transaction details from the tx_id if the transaction belongs to the wallet.
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
 pub async fn handle_transaction(params: ParamsWalletTransaction) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(params.config.host, "/wallet/transaction")?;
 
@@ -255,23 +319,23 @@ pub async fn handle_transaction(params: ParamsWalletTransaction) -> Result<(), B
     Ok(())
 }
 
+/// Decode the given transaction.
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
 pub async fn handle_decode(params: ParamsWalletDecode) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(params.config.host, "/wallet/decode")?;
 
     let mut map = HashMap::new();
 
-    match params.tx_hex {
-        Some(tx_hex) => {
-            map.insert("tx_hex", tx_hex);
-        }
-        None => {}
+    if let Some(tx_hex) = params.tx_hex {
+        map.insert("tx_hex", tx_hex);
     }
 
-    match params.partial_tx {
-        Some(partial_tx) => {
-            map.insert("partial_tx", partial_tx);
-        }
-        None => {}
+    if let Some(partial_tx) = params.partial_tx {
+        map.insert("partial_tx", partial_tx);
     }
 
     let text_response = reqwest::Client::new()
@@ -287,6 +351,12 @@ pub async fn handle_decode(params: ParamsWalletDecode) -> Result<(), Box<dyn std
     Ok(())
 }
 
+/// Get the number of blocks confirming a given transaction.
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
 pub async fn handle_tx_confirmation(params: ParamsWalletTxConfirmation) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(params.config.host, "/wallet/tx-confirmation-blocks")?;
 
@@ -303,6 +373,12 @@ pub async fn handle_tx_confirmation(params: ParamsWalletTxConfirmation) -> Resul
     Ok(())
 }
 
+/// Send a simple transaction.
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
 pub async fn handle_simple_send(params: ParamsWalletSimpleSend) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(params.config.host, "/wallet/simple-send-tx")?;
 
@@ -332,6 +408,12 @@ pub async fn handle_simple_send(params: ParamsWalletSimpleSend) -> Result<(), Bo
     Ok(())
 }
 
+/// Send a transaction as specified in the given body.
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
 pub async fn handle_send(params: ParamsWalletSend) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(params.config.host, "/wallet/send-tx")?;
 
@@ -350,6 +432,12 @@ pub async fn handle_send(params: ParamsWalletSend) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
+/// Create a custom token in the given wallet.
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
 pub async fn handle_create_token(params: ParamsWalletCreateToken) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(params.config.host, "/wallet/simple-send-tx")?;
 

@@ -12,23 +12,25 @@ jobs:
           - release_for: Linux
             os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            name: linux.tar.gz
+            bin_name: linux_headless_cli
 
           - release_for: Windows
             os: windows-latest
             target: x86_64-pc-windows-msvc
-            name: windows.tar.gz
+            bin_name: windows_headless_cli
 
           - release_for: Mac
             os: macOS-latest
             target: x86_64-apple-darwin
-            name: mac.tar.gz
+            bin_name: mac_headless_cli
 
     runs-on: ${{ matrix.platform.os }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release --all-features
-
+      - name: Archive binaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.platform.bin_name }}
+          path: target/release/headless_cli
