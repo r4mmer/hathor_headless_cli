@@ -14,6 +14,7 @@ fn build_headless_url(host: String, path: &str) -> Result<Url, Box<dyn std::erro
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
 enum HashMapValue {
     Int(u32),
     String(String),

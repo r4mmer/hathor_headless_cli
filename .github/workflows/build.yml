@@ -1,0 +1,34 @@
+name: Build binaries
+on:
+  push:
+    tags: [ v* ]
+
+jobs:
+  release:
+    name: Release - ${{ matrix.platform.release_for }}
+    strategy:
+      matrix:
+        platform:
+          - release_for: Linux
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            name: linux.tar.gz
+
+          - release_for: Windows
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            name: windows.tar.gz
+
+          - release_for: Mac
+            os: macOS-latest
+            target: x86_64-apple-darwin
+            name: mac.tar.gz
+
+    runs-on: ${{ matrix.platform.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: cargo build --release --all-features
+
