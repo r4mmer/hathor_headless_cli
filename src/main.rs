@@ -5,6 +5,8 @@ use params::*;
 use handler::*;
 
 use clap::{Parser, Subcommand};
+use env_logger;
+use log;
 
 /////////////////////////////////////////// CLI structure
 
@@ -13,6 +15,9 @@ use clap::{Parser, Subcommand};
 struct Cli {
     #[arg(long, default_value = "http://localhost:8000")]
     host: String,
+
+    #[arg(long, default_value_t = false)]
+    debug: bool,
 
     #[command(subcommand)]
     command: Option<Commands>
@@ -285,13 +290,22 @@ async fn handle_wallet(config: CliConfig, wallet_id: &String, wallet_cmd: &Walle
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+
     let cli = Cli::parse();
     let result: Result<(), Box<dyn std::error::Error>>;
 
     let config = CliConfig {
         host: cli.host,
+        debug: cli.debug,
     };
 
+    // Configure logging using the default RUST_LOG envvar
+    let mut log_builder = env_logger::Builder::from_default_env();
+    if cli.debug {
+        // Force trace logging to debug reqwest data
+        log_builder.filter_level(log::LevelFilter::Trace);
+    }
+    log_builder.init();
 
     match &cli.command {
         Some(Commands::Start { wallet_id, seed_key, passphrase }) => {

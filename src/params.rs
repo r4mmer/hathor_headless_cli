@@ -6,6 +6,8 @@
 pub struct CliConfig {
     /// The base_url to send requests
     pub host: String,
+    /// Enable reqwest trace logging
+    pub debug: bool,
 }
 
 /// Arguments for the start command

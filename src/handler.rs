@@ -1,6 +1,6 @@
 use crate::params::*;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 
 use reqwest::{self, Url};
 use serde::{Serialize, Deserialize};
@@ -19,12 +19,20 @@ use serde::{Serialize, Deserialize};
 ///
 /// ```
 /// let base_url: String = "http://localhost:8000";
-/// let actual_url = build_headless_url(base_url, "/path/to/api")/
+/// let actual_url = build_headless_url(&base_url, "/path/to/api")/
 /// ```
-fn build_headless_url(host: String, path: &str) -> Result<Url, Box<dyn std::error::Error>> {
+fn build_headless_url(host: &String, path: &str) -> Result<Url, Box<dyn std::error::Error>> {
     let base_url = Url::parse(&host)?;
     let url = base_url.join(path)?;
-    return Ok(url);
+    Ok(url)
+}
+
+fn build_client(config: &CliConfig) -> reqwest::Result<reqwest::Client> {
+    reqwest::Client::builder()
+        .connection_verbose(config.debug)
+        .connect_timeout(Duration::from_secs(10))
+        .user_agent("headless cli")
+        .build()
 }
 
 /// An enum to wrap the value in a multi-valued HashMap.
@@ -56,9 +64,9 @@ pub async fn handle_start(params: ParamsStart) -> Result<(), Box<dyn std::error:
         map.insert("passphrase", passphrase);
     }
 
-    let url = build_headless_url(params.config.host, "/start")?;
+    let url = build_headless_url(&params.config.host, "/start")?;
 
-    let text_response = reqwest::Client::new()
+    let text_response = build_client(&params.config)?
         .post(url)
         .json(&map)
         .send()
@@ -77,9 +85,9 @@ pub async fn handle_start(params: ParamsStart) -> Result<(), Box<dyn std::error:
 /// * `params` - arguments to configure the call being made
 ///
 pub async fn handle_configuration_string(params: ParamsConfigString) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(params.config.host, "/configuration-string")?;
+    let url = build_headless_url(&params.config.host, "/configuration-string")?;
 
-    let text_response = reqwest::Client::new()
+    let text_response = build_client(&params.config)?
         .get(url)
         .query(&[("token", params.token)])
         .send()
@@ -105,9 +113,9 @@ pub async fn handle_multisig_pubkey(params: ParamsMultisigPubkey) -> Result<(), 
         map.insert("passphrase", passphrase);
     }
 
-    let url = build_headless_url(params.config.host, "/multisig-pubkey")?;
+    let url = build_headless_url(&params.config.host, "/multisig-pubkey")?;
 
-    let text_response = reqwest::Client::new()
+    let text_response = build_client(&params.config)?
         .post(url)
         .json(&map)
         .send()
@@ -127,9 +135,9 @@ pub async fn handle_multisig_pubkey(params: ParamsMultisigPubkey) -> Result<(), 
 /// * `wallet_id` - which wallet to fetch the status
 ///
 pub async fn handle_status(params: CliConfig, wallet_id: String) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(params.host, "/wallet/status")?;
+    let url = build_headless_url(&params.host, "/wallet/status")?;
 
-    let text_response = reqwest::Client::new()
+    let text_response = build_client(&params)?
         .get(url)
         .header("X-Wallet-Id", wallet_id)
         .send()
@@ -148,9 +156,9 @@ pub async fn handle_status(params: CliConfig, wallet_id: String) -> Result<(), B
 /// * `params` - arguments to configure the call being made
 ///
 pub async fn handle_balance(params: ParamsWalletBalance) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(params.config.host, "/wallet/balance")?;
+    let url = build_headless_url(&params.config.host, "/wallet/balance")?;
 
-    let mut req_builder = reqwest::Client::new()
+    let mut req_builder = build_client(&params.config)?
         .get(url)
         .header("X-Wallet-Id", params.wallet_id);
 
@@ -175,9 +183,9 @@ pub async fn handle_balance(params: ParamsWalletBalance) -> Result<(), Box<dyn s
 /// * `params` - arguments to configure the call being made
 ///
 pub async fn handle_address(params: ParamsWalletAddress) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(params.config.host, "/wallet/address")?;
+    let url = build_headless_url(&params.config.host, "/wallet/address")?;
 
-    let mut req_builder = reqwest::Client::new()
+    let mut req_builder = build_client(&params.config)?
         .get(url)
         .header("X-Wallet-Id", params.wallet_id);
 
@@ -206,9 +214,9 @@ pub async fn handle_address(params: ParamsWalletAddress) -> Result<(), Box<dyn s
 /// * `params` - arguments to configure the call being made
 ///
 pub async fn handle_address_info(params: ParamsWalletAddressInfo) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(params.config.host, "/wallet/address-info")?;
+    let url = build_headless_url(&params.config.host, "/wallet/address-info")?;
 
-    let mut req_builder = reqwest::Client::new()
+    let mut req_builder = build_client(&params.config)?
         .get(url)
         .header("X-Wallet-Id", params.wallet_id)
         .query(&[("address", params.address)]);
@@ -234,9 +242,9 @@ pub async fn handle_address_info(params: ParamsWalletAddressInfo) -> Result<(), 
 /// * `params` - arguments to configure the call being made
 ///
 pub async fn handle_address_index(params: ParamsWalletAddressIndex) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(params.config.host, "/wallet/address-index")?;
+    let url = build_headless_url(&params.config.host, "/wallet/address-index")?;
 
-    let text_response = reqwest::Client::new()
+    let text_response = build_client(&params.config)?
         .get(url)
         .header("X-Wallet-Id", params.wallet_id)
         .query(&[("address", params.address)])
@@ -256,9 +264,9 @@ pub async fn handle_address_index(params: ParamsWalletAddressIndex) -> Result<()
 /// * `params` - arguments to configure the call being made
 ///
 pub async fn handle_addresses(params: ParamsWalletAddresses) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(params.config.host, "/wallet/addresses")?;
+    let url = build_headless_url(&params.config.host, "/wallet/addresses")?;
 
-    let text_response = reqwest::Client::new()
+    let text_response = build_client(&params.config)?
         .get(url)
         .header("X-Wallet-Id", params.wallet_id)
         .send()
@@ -277,9 +285,9 @@ pub async fn handle_addresses(params: ParamsWalletAddresses) -> Result<(), Box<d
 /// * `params` - arguments to configure the call being made
 ///
 pub async fn handle_tx_history(params: ParamsWalletTxHistory) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(params.config.host, "/wallet/tx-history")?;
+    let url = build_headless_url(&params.config.host, "/wallet/tx-history")?;
 
-    let mut req_builder = reqwest::Client::new()
+    let mut req_builder = build_client(&params.config)?
         .get(url)
         .header("X-Wallet-Id", params.wallet_id);
 
@@ -304,9 +312,9 @@ pub async fn handle_tx_history(params: ParamsWalletTxHistory) -> Result<(), Box<
 /// * `params` - arguments to configure the call being made
 ///
 pub async fn handle_transaction(params: ParamsWalletTransaction) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(params.config.host, "/wallet/transaction")?;
+    let url = build_headless_url(&params.config.host, "/wallet/transaction")?;
 
-    let text_response = reqwest::Client::new()
+    let text_response = build_client(&params.config)?
         .get(url)
         .header("X-Wallet-Id", params.wallet_id)
         .query(&[("id", params.id)])
@@ -326,7 +334,7 @@ pub async fn handle_transaction(params: ParamsWalletTransaction) -> Result<(), B
 /// * `params` - arguments to configure the call being made
 ///
 pub async fn handle_decode(params: ParamsWalletDecode) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(params.config.host, "/wallet/decode")?;
+    let url = build_headless_url(&params.config.host, "/wallet/decode")?;
 
     let mut map = HashMap::new();
 
@@ -338,7 +346,7 @@ pub async fn handle_decode(params: ParamsWalletDecode) -> Result<(), Box<dyn std
         map.insert("partial_tx", partial_tx);
     }
 
-    let text_response = reqwest::Client::new()
+    let text_response = build_client(&params.config)?
         .post(url)
         .header("X-Wallet-Id", params.wallet_id)
         .json(&map)
@@ -358,9 +366,9 @@ pub async fn handle_decode(params: ParamsWalletDecode) -> Result<(), Box<dyn std
 /// * `params` - arguments to configure the call being made
 ///
 pub async fn handle_tx_confirmation(params: ParamsWalletTxConfirmation) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(params.config.host, "/wallet/tx-confirmation-blocks")?;
+    let url = build_headless_url(&params.config.host, "/wallet/tx-confirmation-blocks")?;
 
-    let text_response = reqwest::Client::new()
+    let text_response = build_client(&params.config)?
         .get(url)
         .header("X-Wallet-Id", params.wallet_id)
         .query(&[("id", params.id)])
@@ -380,7 +388,7 @@ pub async fn handle_tx_confirmation(params: ParamsWalletTxConfirmation) -> Resul
 /// * `params` - arguments to configure the call being made
 ///
 pub async fn handle_simple_send(params: ParamsWalletSimpleSend) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(params.config.host, "/wallet/simple-send-tx")?;
+    let url = build_headless_url(&params.config.host, "/wallet/simple-send-tx")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
     map.insert("address", HashMapValue::String(params.address));
@@ -395,7 +403,7 @@ pub async fn handle_simple_send(params: ParamsWalletSimpleSend) -> Result<(), Bo
         map.insert("token", HashMapValue::String(token));
     }
 
-    let text_response = reqwest::Client::new()
+    let text_response = build_client(&params.config)?
         .post(url)
         .header("X-Wallet-Id", params.wallet_id)
         .json(&map)
@@ -415,11 +423,11 @@ pub async fn handle_simple_send(params: ParamsWalletSimpleSend) -> Result<(), Bo
 /// * `params` - arguments to configure the call being made
 ///
 pub async fn handle_send(params: ParamsWalletSend) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(params.config.host, "/wallet/send-tx")?;
+    let url = build_headless_url(&params.config.host, "/wallet/send-tx")?;
 
     // .header(header::CONTENT_TYPE, "application/json")
     // .body(params.body)
-    let text_response = reqwest::Client::new()
+    let text_response = build_client(&params.config)?
         .post(url)
         .header("X-Wallet-Id", params.wallet_id)
         .json(&params.body)
@@ -439,7 +447,7 @@ pub async fn handle_send(params: ParamsWalletSend) -> Result<(), Box<dyn std::er
 /// * `params` - arguments to configure the call being made
 ///
 pub async fn handle_create_token(params: ParamsWalletCreateToken) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(params.config.host, "/wallet/simple-send-tx")?;
+    let url = build_headless_url(&params.config.host, "/wallet/simple-send-tx")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
     map.insert("name", HashMapValue::String(params.name));
@@ -478,7 +486,7 @@ pub async fn handle_create_token(params: ParamsWalletCreateToken) -> Result<(), 
         map.insert("allow_external_melt_authority_address", HashMapValue::Bool(allow_external_melt_authority_address));
     }
 
-    let text_response = reqwest::Client::new()
+    let text_response = build_client(&params.config)?
         .post(url)
         .header("X-Wallet-Id", params.wallet_id)
         .json(&map)
