@@ -4,14 +4,16 @@ pub mod handler;
 use params::*;
 use handler::*;
 
-use clap::{Parser, Subcommand};
+use clap::{self, Parser, Subcommand};
 use env_logger;
 use log;
+
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /////////////////////////////////////////// CLI structure
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author = "r4mmer", version = VERSION, long_about = None)]
 struct Cli {
     #[arg(long, default_value = "http://localhost:8000")]
     host: String,
