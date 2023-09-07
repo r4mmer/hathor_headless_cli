@@ -1,9 +1,12 @@
 use crate::params::*;
 
-use std::{collections::HashMap, time::Duration};
+use std::{collections::{HashMap, HashSet}, time::Duration};
 
 use reqwest::{self, Url};
 use serde::{Serialize, Deserialize};
+use serde_json::json;
+
+use crate::data::*;
 
 /////////////////////////////////////////// Utils
 
@@ -447,7 +450,7 @@ pub async fn handle_send(params: ParamsWalletSend) -> Result<(), Box<dyn std::er
 /// * `params` - arguments to configure the call being made
 ///
 pub async fn handle_create_token(params: ParamsWalletCreateToken) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(&params.config.host, "/wallet/simple-send-tx")?;
+    let url = build_headless_url(&params.config.host, "/wallet/create-token")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
     map.insert("name", HashMapValue::String(params.name));
@@ -496,5 +499,296 @@ pub async fn handle_create_token(params: ParamsWalletCreateToken) -> Result<(), 
         .await?;
 
     println!("{}", text_response);
+    Ok(())
+}
+
+/// Mint tokens.
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
+pub async fn handle_mint_tokens(params: ParamsWalletMintTokens) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(&params.config.host, "/wallet/mint-tokens")?;
+
+    let mut map: HashMap<&str, HashMapValue> = HashMap::new();
+    map.insert("token", HashMapValue::String(params.token));
+    map.insert("amount", HashMapValue::Int(params.amount));
+
+    if let Some(address) = params.address {
+        map.insert("address", HashMapValue::String(address));
+    }
+
+    if let Some(change_address) = params.change_address {
+        map.insert("change_address", HashMapValue::String(change_address));
+    }
+
+    if let Some(mint_authority_address) = params.mint_authority_address {
+        map.insert("mint_authority_address", HashMapValue::String(mint_authority_address));
+    }
+
+    if let Some(allow_external_mint_authority_address) = params.allow_external_mint_authority_address {
+        map.insert("allow_external_mint_authority_address", HashMapValue::Bool(allow_external_mint_authority_address));
+    }
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .header("X-Wallet-Id", params.wallet_id)
+        .json(&map)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
+    Ok(())
+}
+
+/// Melt tokens
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
+pub async fn handle_melt_tokens(params: ParamsWalletMeltTokens) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(&params.config.host, "/wallet/melt-tokens")?;
+
+    let mut map: HashMap<&str, HashMapValue> = HashMap::new();
+    map.insert("token", HashMapValue::String(params.token));
+    map.insert("amount", HashMapValue::Int(params.amount));
+
+    if let Some(address) = params.address {
+        map.insert("address", HashMapValue::String(address));
+    }
+
+    if let Some(change_address) = params.change_address {
+        map.insert("change_address", HashMapValue::String(change_address));
+    }
+
+    if let Some(melt_authority_address) = params.melt_authority_address {
+        map.insert("melt_authority_address", HashMapValue::String(melt_authority_address));
+    }
+
+    if let Some(allow_external_melt_authority_address) = params.allow_external_melt_authority_address {
+        map.insert("allow_external_melt_authority_address", HashMapValue::Bool(allow_external_melt_authority_address));
+    }
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .header("X-Wallet-Id", params.wallet_id)
+        .json(&map)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
+    Ok(())
+}
+
+/// Get utxos following the rules defined in the given filters
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
+pub async fn handle_utxo_filter(params: ParamsWalletUtxoFilter) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(&params.config.host, "/wallet/utxo-filter")?;
+
+    let mut map: HashMap<&str, HashMapValue> = HashMap::new();
+
+    if let Some(max_utxos) = params.max_utxos {
+        map.insert("max_utxos", HashMapValue::Int(max_utxos));
+    }
+
+    if let Some(token) = params.token {
+        map.insert("token", HashMapValue::String(token));
+    }
+
+    if let Some(filter_address) = params.filter_address {
+        map.insert("filter_address", HashMapValue::String(filter_address));
+    }
+
+    if let Some(amount_smaller_than) = params.amount_smaller_than {
+        map.insert("amount_smaller_than", HashMapValue::Int(amount_smaller_than));
+    }
+
+    if let Some(amount_bigger_than) = params.amount_bigger_than {
+        map.insert("amount_bigger_than", HashMapValue::Int(amount_bigger_than));
+    }
+
+    if let Some(maximum_amount) = params.maximum_amount {
+        map.insert("maximum_amount", HashMapValue::Int(maximum_amount));
+    }
+
+    if let Some(only_available_utxos) = params.only_available_utxos {
+        map.insert("only_available_utxos", HashMapValue::Bool(only_available_utxos));
+    }
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .header("X-Wallet-Id", params.wallet_id)
+        .json(&map)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
+    Ok(())
+}
+
+/// Consolidate the utxos following the given filters
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
+pub async fn handle_utxo_consolidation(params: ParamsWalletUtxoConsolidation) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(&params.config.host, "/wallet/utxo-consolidation")?;
+
+    let mut map: HashMap<&str, HashMapValue> = HashMap::new();
+
+    if let Some(max_utxos) = params.max_utxos {
+        map.insert("max_utxos", HashMapValue::Int(max_utxos));
+    }
+
+    if let Some(token) = params.token {
+        map.insert("token", HashMapValue::String(token));
+    }
+
+    if let Some(filter_address) = params.filter_address {
+        map.insert("filter_address", HashMapValue::String(filter_address));
+    }
+
+    if let Some(amount_smaller_than) = params.amount_smaller_than {
+        map.insert("amount_smaller_than", HashMapValue::Int(amount_smaller_than));
+    }
+
+    if let Some(amount_bigger_than) = params.amount_bigger_than {
+        map.insert("amount_bigger_than", HashMapValue::Int(amount_bigger_than));
+    }
+
+    if let Some(maximum_amount) = params.maximum_amount {
+        map.insert("maximum_amount", HashMapValue::Int(maximum_amount));
+    }
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .header("X-Wallet-Id", params.wallet_id)
+        .json(&map)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
+    Ok(())
+}
+
+/// Create an NFT in the given wallet.
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
+pub async fn handle_create_nft(params: ParamsWalletCreateNft) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(&params.config.host, "/wallet/create-nft")?;
+
+    let mut map: HashMap<&str, HashMapValue> = HashMap::new();
+    map.insert("name", HashMapValue::String(params.name));
+    map.insert("symbol", HashMapValue::String(params.symbol));
+    map.insert("data", HashMapValue::String(params.data));
+    map.insert("amount", HashMapValue::Int(params.amount));
+
+    if let Some(address) = params.address {
+        map.insert("address", HashMapValue::String(address));
+    }
+
+    if let Some(change_address) = params.change_address {
+        map.insert("change_address", HashMapValue::String(change_address));
+    }
+
+    if let Some(create_mint) = params.create_mint {
+        map.insert("create_mint", HashMapValue::Bool(create_mint));
+    }
+
+    if let Some(mint_authority_address) = params.mint_authority_address {
+        map.insert("mint_authority_address", HashMapValue::String(mint_authority_address));
+    }
+
+    if let Some(allow_external_mint_authority_address) = params.allow_external_mint_authority_address {
+        map.insert("allow_external_mint_authority_address", HashMapValue::Bool(allow_external_mint_authority_address));
+    }
+
+    if let Some(create_melt) = params.create_melt {
+        map.insert("create_melt", HashMapValue::Bool(create_melt));
+    }
+
+    if let Some(melt_authority_address) = params.melt_authority_address {
+        map.insert("melt_authority_address", HashMapValue::String(melt_authority_address));
+    }
+
+    if let Some(allow_external_melt_authority_address) = params.allow_external_melt_authority_address {
+        map.insert("allow_external_melt_authority_address", HashMapValue::Bool(allow_external_melt_authority_address));
+    }
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .header("X-Wallet-Id", params.wallet_id)
+        .json(&map)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
+    Ok(())
+}
+
+/// Stop a wallet.
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
+pub async fn handle_stop(params: ParamsWalletStop) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(&params.config.host, "/wallet/stop")?;
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .header("X-Wallet-Id", params.wallet_id)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
+    Ok(())
+}
+
+pub async fn handle_list_tokens(params: ParamsCustomListTokens) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(&params.config.host, "/wallet/tx-history")?;
+
+    let mut tokens = HashSet::new();
+    let tx_history = build_client(&params.config)?
+        .get(url)
+        .header("X-Wallet-Id", params.wallet_id)
+        .send()
+        .await?
+        .json::<Vec<HistoryTx>>()
+        .await?;
+
+    for tx in tx_history.iter() {
+        // Find tokens in the outputs
+        for output in tx.outputs.iter() {
+            // TODO: check that output.decoded.address existst and is from the wallet
+            tokens.insert(output.token.clone());
+        }
+    }
+
+    let tokens_json = json!(tokens);
+
+    println!("{}", tokens_json.to_string());
     Ok(())
 }

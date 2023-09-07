@@ -190,3 +190,129 @@ pub struct ParamsWalletCreateToken {
     /// Flag to allow sending the melt authority to an address not from the wallet
     pub allow_external_melt_authority_address: Option<bool>,
 }
+
+/// Arguments for the wallet mint tokens command
+pub struct ParamsWalletMintTokens {
+    /// Common config
+    pub config: CliConfig,
+    /// wallet-id used to indentify the wallet
+    pub wallet_id: String,
+    /// Uid of the token
+    pub token: String,
+    /// amount of tokens to mint
+    pub amount: u32,
+    /// Optionally specify the destination address
+    pub address: Option<String>,
+    /// Optionally specify the change address
+    pub change_address: Option<String>,
+    /// Optionally send the mint authority to this address
+    pub mint_authority_address: Option<String>,
+    /// Flag to allow sending the mint authority to an address not from the wallet
+    pub allow_external_mint_authority_address: Option<bool>,
+}
+
+/// Arguments for the wallet melt tokens command
+pub struct ParamsWalletMeltTokens {
+    /// Common config
+    pub config: CliConfig,
+    /// wallet-id used to indentify the wallet
+    pub wallet_id: String,
+    /// Uid of the token
+    pub token: String,
+    /// amount of tokens to melt
+    pub amount: u32,
+    /// Optionally specify the destination address
+    pub address: Option<String>,
+    /// Optionally specify the deposit address
+    pub deposit_address: Option<String>,
+    /// Optionally specify the change address
+    pub change_address: Option<String>,
+    /// Optionally send the melt authority to this address
+    pub melt_authority_address: Option<String>,
+    /// Flag to allow sending the melt authority to an address not from the wallet
+    pub allow_external_melt_authority_address: Option<bool>,
+}
+
+/// Arguments for the wallet utxo filter command
+pub struct ParamsWalletUtxoFilter {
+    /// Common config
+    pub config: CliConfig,
+    /// wallet-id used to indentify the wallet
+    pub wallet_id: String,
+    /// Maximum number of utxos to return
+    pub max_utxos: Option<u32>,
+    /// Find utxos of this token
+    pub token: Option<String>,
+    /// Filter for utxos on this address
+    pub filter_address: Option<String>,
+    /// Only utxos with amount smaller than this
+    pub amount_smaller_than: Option<u32>,
+    /// Only utxos with amount smaller than this
+    pub amount_bigger_than: Option<u32>,
+    /// Maximum sum of tokens from returned utxos
+    pub maximum_amount: Option<u32>,
+    /// Only return unlocked and ready to be used utxos, headless defaults to true
+    pub only_available_utxos: Option<bool>,
+}
+
+/// Arguments for the wallet utxo consolidation command
+pub struct ParamsWalletUtxoConsolidation {
+    /// Common config
+    pub config: CliConfig,
+    /// wallet-id used to indentify the wallet
+    pub wallet_id: String,
+    /// Maximum number of utxos to return
+    pub max_utxos: Option<u32>,
+    /// Find utxos of this token
+    pub token: Option<String>,
+    /// Filter for utxos on this address
+    pub filter_address: Option<String>,
+    /// Only utxos with amount smaller than this
+    pub amount_smaller_than: Option<u32>,
+    /// Only utxos with amount smaller than this
+    pub amount_bigger_than: Option<u32>,
+    /// Maximum sum of tokens from returned utxos
+    pub maximum_amount: Option<u32>,
+}
+
+/// Arguments for the wallet create nft command
+pub struct ParamsWalletCreateNft {
+    /// Common config
+    pub config: CliConfig,
+    /// wallet-id used to indentify the wallet
+    pub wallet_id: String,
+    /// Name of the nft to create
+    pub name: String,
+    /// Symbol of the nft to create
+    pub symbol: String,
+    /// amount of nfts to create
+    pub amount: u32,
+    /// Data for the NFT's data output
+    pub data: String,
+    /// Optionally specify the destination address
+    pub address: Option<String>,
+    /// Optionally specify the change address
+    pub change_address: Option<String>,
+    /// Create mint authority for the wallet, headless defaults to true
+    pub create_mint: Option<bool>,
+    /// Optionally send the mint authority to this address
+    pub mint_authority_address: Option<String>,
+    /// Flag to allow sending the mint authority to an address not from the wallet
+    pub allow_external_mint_authority_address: Option<bool>,
+    /// Create melt authority for the wallet, headless defaults to true
+    pub create_melt: Option<bool>,
+    /// Optionally send the melt authority to this address
+    pub melt_authority_address: Option<String>,
+    /// Flag to allow sending the melt authority to an address not from the wallet
+    pub allow_external_melt_authority_address: Option<bool>,
+}
+
+pub struct ParamsWalletStop {
+    pub config: CliConfig,
+    pub wallet_id: String,
+}
+
+pub struct ParamsCustomListTokens {
+    pub config: CliConfig,
+    pub wallet_id: String,
+}
