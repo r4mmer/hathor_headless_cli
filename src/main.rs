@@ -1,13 +1,16 @@
-pub mod params;
-pub mod handler;
 pub mod data;
+pub mod handler;
+mod methods;
+pub mod params;
+mod utils;
 
-use params::*;
 use handler::*;
+use params::*;
 
 use clap::{self, Parser, Subcommand};
 use env_logger;
-use log;
+use std::env;
+// use log;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -23,7 +26,7 @@ struct Cli {
     debug: bool,
 
     #[command(subcommand)]
-    command: Option<Commands>
+    command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
@@ -37,7 +40,7 @@ enum Commands {
         passphrase: Option<String>,
     },
 
-    MultisigPubkey  {
+    MultisigPubkey {
         seed_key: String,
         #[arg(short, long)]
         passphrase: Option<String>,
@@ -52,13 +55,13 @@ enum Commands {
         wallet_id: String,
 
         #[command(subcommand)]
-        command: WalletCommands
+        command: WalletCommands,
     },
 
     Custom {
         #[command(subcommand)]
-        command: CustomCommands
-    }
+        command: CustomCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -66,7 +69,7 @@ enum CustomCommands {
     ListTokens {
         #[arg(short, long, default_value = "default")]
         wallet_id: String,
-    }
+    },
 }
 
 #[derive(Subcommand)]
@@ -238,10 +241,13 @@ enum WalletCommands {
         allow_external_melt_authority_address: Option<bool>,
     },
 
-    Stop { },
+    Stop {},
 }
 
-async fn handle_custom(config: CliConfig, custom_cmd: &CustomCommands) -> Result<(), Box<dyn std::error::Error>> {
+async fn handle_custom(
+    config: CliConfig,
+    custom_cmd: &CustomCommands,
+) -> Result<(), Box<dyn std::error::Error>> {
     match custom_cmd {
         CustomCommands::ListTokens { wallet_id } => {
             let params = ParamsCustomListTokens {
@@ -255,10 +261,13 @@ async fn handle_custom(config: CliConfig, custom_cmd: &CustomCommands) -> Result
     Ok(())
 }
 
-
-async fn handle_wallet(config: CliConfig, wallet_id: String, wallet_cmd: &WalletCommands) -> Result<(), Box<dyn std::error::Error>> {
+async fn handle_wallet(
+    config: CliConfig,
+    wallet_id: String,
+    wallet_cmd: &WalletCommands,
+) -> Result<(), Box<dyn std::error::Error>> {
     match wallet_cmd {
-        WalletCommands::Status {  } => {
+        WalletCommands::Status {} => {
             handle_status(config, wallet_id.to_string()).await?;
         }
 
@@ -271,7 +280,10 @@ async fn handle_wallet(config: CliConfig, wallet_id: String, wallet_cmd: &Wallet
             handle_balance(params).await?;
         }
 
-        WalletCommands::Address { index, mark_as_used } => {
+        WalletCommands::Address {
+            index,
+            mark_as_used,
+        } => {
             let params = ParamsWalletAddress {
                 config,
                 wallet_id,
@@ -300,7 +312,7 @@ async fn handle_wallet(config: CliConfig, wallet_id: String, wallet_cmd: &Wallet
             handle_address_index(params).await?;
         }
 
-        WalletCommands::Addresses {  } => {
+        WalletCommands::Addresses {} => {
             let params = ParamsWalletAddresses { config, wallet_id };
             handle_addresses(params).await?;
         }
@@ -342,7 +354,12 @@ async fn handle_wallet(config: CliConfig, wallet_id: String, wallet_cmd: &Wallet
             handle_tx_confirmation(params).await?;
         }
 
-        WalletCommands::SimpleSend { address, value, change_address, token } => {
+        WalletCommands::SimpleSend {
+            address,
+            value,
+            change_address,
+            token,
+        } => {
             let params = ParamsWalletSimpleSend {
                 config,
                 wallet_id,
@@ -363,7 +380,19 @@ async fn handle_wallet(config: CliConfig, wallet_id: String, wallet_cmd: &Wallet
             handle_send(params).await?;
         }
 
-        WalletCommands::CreateToken { name, symbol, amount, address, change_address, create_mint, mint_authority_address, allow_external_mint_authority_address, create_melt, melt_authority_address, allow_external_melt_authority_address } => {
+        WalletCommands::CreateToken {
+            name,
+            symbol,
+            amount,
+            address,
+            change_address,
+            create_mint,
+            mint_authority_address,
+            allow_external_mint_authority_address,
+            create_melt,
+            melt_authority_address,
+            allow_external_melt_authority_address,
+        } => {
             let params = ParamsWalletCreateToken {
                 config,
                 wallet_id,
@@ -382,7 +411,14 @@ async fn handle_wallet(config: CliConfig, wallet_id: String, wallet_cmd: &Wallet
             handle_create_token(params).await?;
         }
 
-        WalletCommands::MintTokens { token, amount, address, change_address, mint_authority_address, allow_external_mint_authority_address } => {
+        WalletCommands::MintTokens {
+            token,
+            amount,
+            address,
+            change_address,
+            mint_authority_address,
+            allow_external_mint_authority_address,
+        } => {
             let params = ParamsWalletMintTokens {
                 config,
                 wallet_id,
@@ -396,7 +432,15 @@ async fn handle_wallet(config: CliConfig, wallet_id: String, wallet_cmd: &Wallet
             handle_mint_tokens(params).await?;
         }
 
-        WalletCommands::MeltTokens { token, amount, address, deposit_address, change_address, melt_authority_address, allow_external_melt_authority_address }  => {
+        WalletCommands::MeltTokens {
+            token,
+            amount,
+            address,
+            deposit_address,
+            change_address,
+            melt_authority_address,
+            allow_external_melt_authority_address,
+        } => {
             let params = ParamsWalletMeltTokens {
                 config,
                 wallet_id,
@@ -411,7 +455,15 @@ async fn handle_wallet(config: CliConfig, wallet_id: String, wallet_cmd: &Wallet
             handle_melt_tokens(params).await?;
         }
 
-        WalletCommands::UtxoFilter { max_utxos, token, filter_address, amount_smaller_than, amount_bigger_than, maximum_amount, only_available_utxos }  => {
+        WalletCommands::UtxoFilter {
+            max_utxos,
+            token,
+            filter_address,
+            amount_smaller_than,
+            amount_bigger_than,
+            maximum_amount,
+            only_available_utxos,
+        } => {
             let params = ParamsWalletUtxoFilter {
                 config,
                 wallet_id,
@@ -426,7 +478,14 @@ async fn handle_wallet(config: CliConfig, wallet_id: String, wallet_cmd: &Wallet
             handle_utxo_filter(params).await?;
         }
 
-        WalletCommands::UtxoConsolidation { max_utxos, token, filter_address, amount_smaller_than, amount_bigger_than, maximum_amount } => {
+        WalletCommands::UtxoConsolidation {
+            max_utxos,
+            token,
+            filter_address,
+            amount_smaller_than,
+            amount_bigger_than,
+            maximum_amount,
+        } => {
             let params = ParamsWalletUtxoConsolidation {
                 config,
                 wallet_id,
@@ -440,7 +499,20 @@ async fn handle_wallet(config: CliConfig, wallet_id: String, wallet_cmd: &Wallet
             handle_utxo_consolidation(params).await?;
         }
 
-        WalletCommands::CreateNft { name, symbol, amount, data, address, change_address, create_mint, mint_authority_address, allow_external_mint_authority_address, create_melt, melt_authority_address, allow_external_melt_authority_address } => {
+        WalletCommands::CreateNft {
+            name,
+            symbol,
+            amount,
+            data,
+            address,
+            change_address,
+            create_mint,
+            mint_authority_address,
+            allow_external_mint_authority_address,
+            create_melt,
+            melt_authority_address,
+            allow_external_melt_authority_address,
+        } => {
             let params = ParamsWalletCreateNft {
                 config,
                 wallet_id,
@@ -460,7 +532,7 @@ async fn handle_wallet(config: CliConfig, wallet_id: String, wallet_cmd: &Wallet
             handle_create_nft(params).await?;
         }
 
-        WalletCommands::Stop {  } => {
+        WalletCommands::Stop {} => {
             let params = ParamsWalletStop { config, wallet_id };
             handle_stop(params).await?;
         }
@@ -469,12 +541,10 @@ async fn handle_wallet(config: CliConfig, wallet_id: String, wallet_cmd: &Wallet
     Ok(())
 }
 
-
 /////////////////////////////////////////// Main
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-
     let cli = Cli::parse();
     let result: Result<(), Box<dyn std::error::Error>>;
 
@@ -484,15 +554,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Configure logging using the default RUST_LOG envvar
-    let mut log_builder = env_logger::Builder::from_default_env();
-    if cli.debug {
-        // Force trace logging to debug reqwest data
-        log_builder.filter_level(log::LevelFilter::Trace);
+    if cli.debug && env::var("RUST_LOG").is_err() {
+        env::set_var("RUST_LOG", "trace");
     }
-    log_builder.init();
+    env_logger::init();
 
     match &cli.command {
-        Some(Commands::Start { wallet_id, seed_key, passphrase }) => {
+        Some(Commands::Start {
+            wallet_id,
+            seed_key,
+            passphrase,
+        }) => {
             let params = ParamsStart {
                 config,
                 wallet_id: wallet_id.to_string(),
@@ -501,7 +573,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             };
             result = handle_start(params).await;
         }
-        Some(Commands::MultisigPubkey { seed_key, passphrase }) => {
+        Some(Commands::MultisigPubkey {
+            seed_key,
+            passphrase,
+        }) => {
             let params = ParamsMultisigPubkey {
                 config,
                 seed_key: seed_key.to_string(),
@@ -510,7 +585,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             result = handle_multisig_pubkey(params).await;
         }
         Some(Commands::ConfigurationString { token }) => {
-            let params = ParamsConfigString { config, token: token.to_string() };
+            let params = ParamsConfigString {
+                config,
+                token: token.to_string(),
+            };
             result = handle_configuration_string(params).await;
         }
         Some(Commands::Wallet { wallet_id, command }) => {

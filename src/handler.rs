@@ -1,54 +1,12 @@
-use crate::params::*;
-
-use std::{collections::{HashMap, HashSet}, time::Duration};
-
-use reqwest::{self, Url};
-use serde::{Serialize, Deserialize};
-use serde_json::json;
-
 use crate::data::*;
+use crate::methods::*;
+use crate::params::*;
+use crate::utils::*;
 
-/////////////////////////////////////////// Utils
+use std::collections::{HashMap, HashSet};
 
-/// Builds the reqwest URL from a base url (a.k.a host) and the required path
-/// It may fail if either host or path are not valid.
-///
-/// # Arguments
-///
-/// * `host` - Base URL to send the request to
-/// * `path` - The path required to be called
-///
-/// # Examples
-///
-/// ```
-/// let base_url: String = "http://localhost:8000";
-/// let actual_url = build_headless_url(&base_url, "/path/to/api")/
-/// ```
-fn build_headless_url(host: &String, path: &str) -> Result<Url, Box<dyn std::error::Error>> {
-    let base_url = Url::parse(&host)?;
-    let url = base_url.join(path)?;
-    Ok(url)
-}
-
-fn build_client(config: &CliConfig) -> reqwest::Result<reqwest::Client> {
-    reqwest::Client::builder()
-        .connection_verbose(config.debug)
-        .connect_timeout(Duration::from_secs(10))
-        .user_agent("headless cli")
-        .build()
-}
-
-/// An enum to wrap the value in a multi-valued HashMap.
-/// This allows the HashMap to have string, integers and booleans as value while
-/// allowing serializing to json things like:
-/// { "address": "H123...", "value": 123, "create_mint": true }
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged)]
-enum HashMapValue {
-    Int(u32),
-    String(String),
-    Bool(bool),
-}
+use log::debug;
+use serde_json::json;
 
 /////////////////////////////////////////// handlers
 
@@ -87,7 +45,9 @@ pub async fn handle_start(params: ParamsStart) -> Result<(), Box<dyn std::error:
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_configuration_string(params: ParamsConfigString) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_configuration_string(
+    params: ParamsConfigString,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/configuration-string")?;
 
     let text_response = build_client(&params.config)?
@@ -108,7 +68,9 @@ pub async fn handle_configuration_string(params: ParamsConfigString) -> Result<(
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_multisig_pubkey(params: ParamsMultisigPubkey) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_multisig_pubkey(
+    params: ParamsMultisigPubkey,
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut map = HashMap::new();
     map.insert("seedKey", params.seed_key);
 
@@ -137,7 +99,10 @@ pub async fn handle_multisig_pubkey(params: ParamsMultisigPubkey) -> Result<(), 
 /// * `params` - Base configuration all cli calls share
 /// * `wallet_id` - which wallet to fetch the status
 ///
-pub async fn handle_status(params: CliConfig, wallet_id: String) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_status(
+    params: CliConfig,
+    wallet_id: String,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.host, "/wallet/status")?;
 
     let text_response = build_client(&params)?
@@ -169,11 +134,7 @@ pub async fn handle_balance(params: ParamsWalletBalance) -> Result<(), Box<dyn s
         req_builder = req_builder.query(&[("token", token)]);
     }
 
-    let text_response = req_builder
-        .send()
-        .await?
-        .text()
-        .await?;
+    let text_response = req_builder.send().await?.text().await?;
 
     println!("{}", text_response);
     Ok(())
@@ -200,11 +161,7 @@ pub async fn handle_address(params: ParamsWalletAddress) -> Result<(), Box<dyn s
         req_builder = req_builder.query(&[("mark_as_used", mark_as_used)]);
     }
 
-    let text_response = req_builder
-        .send()
-        .await?
-        .text()
-        .await?;
+    let text_response = req_builder.send().await?.text().await?;
 
     println!("{}", text_response);
     Ok(())
@@ -216,7 +173,9 @@ pub async fn handle_address(params: ParamsWalletAddress) -> Result<(), Box<dyn s
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_address_info(params: ParamsWalletAddressInfo) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_address_info(
+    params: ParamsWalletAddressInfo,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/address-info")?;
 
     let mut req_builder = build_client(&params.config)?
@@ -228,11 +187,7 @@ pub async fn handle_address_info(params: ParamsWalletAddressInfo) -> Result<(), 
         req_builder = req_builder.query(&[("token", token)]);
     }
 
-    let text_response = req_builder
-        .send()
-        .await?
-        .text()
-        .await?;
+    let text_response = req_builder.send().await?.text().await?;
 
     println!("{}", text_response);
     Ok(())
@@ -244,7 +199,9 @@ pub async fn handle_address_info(params: ParamsWalletAddressInfo) -> Result<(), 
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_address_index(params: ParamsWalletAddressIndex) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_address_index(
+    params: ParamsWalletAddressIndex,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/address-index")?;
 
     let text_response = build_client(&params.config)?
@@ -266,7 +223,9 @@ pub async fn handle_address_index(params: ParamsWalletAddressIndex) -> Result<()
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_addresses(params: ParamsWalletAddresses) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_addresses(
+    params: ParamsWalletAddresses,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/addresses")?;
 
     let text_response = build_client(&params.config)?
@@ -287,7 +246,9 @@ pub async fn handle_addresses(params: ParamsWalletAddresses) -> Result<(), Box<d
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_tx_history(params: ParamsWalletTxHistory) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_tx_history(
+    params: ParamsWalletTxHistory,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/tx-history")?;
 
     let mut req_builder = build_client(&params.config)?
@@ -298,11 +259,7 @@ pub async fn handle_tx_history(params: ParamsWalletTxHistory) -> Result<(), Box<
         req_builder = req_builder.query(&[("limit", limit)]);
     }
 
-    let text_response = req_builder
-        .send()
-        .await?
-        .text()
-        .await?;
+    let text_response = req_builder.send().await?.text().await?;
 
     println!("{}", text_response);
     Ok(())
@@ -314,7 +271,9 @@ pub async fn handle_tx_history(params: ParamsWalletTxHistory) -> Result<(), Box<
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_transaction(params: ParamsWalletTransaction) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_transaction(
+    params: ParamsWalletTransaction,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/transaction")?;
 
     let text_response = build_client(&params.config)?
@@ -342,7 +301,7 @@ pub async fn handle_decode(params: ParamsWalletDecode) -> Result<(), Box<dyn std
     let mut map = HashMap::new();
 
     if let Some(tx_hex) = params.tx_hex {
-        map.insert("tx_hex", tx_hex);
+        map.insert("txHex", tx_hex);
     }
 
     if let Some(partial_tx) = params.partial_tx {
@@ -368,7 +327,9 @@ pub async fn handle_decode(params: ParamsWalletDecode) -> Result<(), Box<dyn std
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_tx_confirmation(params: ParamsWalletTxConfirmation) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_tx_confirmation(
+    params: ParamsWalletTxConfirmation,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/tx-confirmation-blocks")?;
 
     let text_response = build_client(&params.config)?
@@ -390,13 +351,14 @@ pub async fn handle_tx_confirmation(params: ParamsWalletTxConfirmation) -> Resul
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_simple_send(params: ParamsWalletSimpleSend) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_simple_send(
+    params: ParamsWalletSimpleSend,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/simple-send-tx")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
     map.insert("address", HashMapValue::String(params.address));
     map.insert("value", HashMapValue::Int(params.value));
-
 
     if let Some(change_address) = params.change_address {
         map.insert("change_address", HashMapValue::String(change_address));
@@ -449,7 +411,9 @@ pub async fn handle_send(params: ParamsWalletSend) -> Result<(), Box<dyn std::er
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_create_token(params: ParamsWalletCreateToken) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_create_token(
+    params: ParamsWalletCreateToken,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/create-token")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
@@ -470,11 +434,19 @@ pub async fn handle_create_token(params: ParamsWalletCreateToken) -> Result<(), 
     }
 
     if let Some(mint_authority_address) = params.mint_authority_address {
-        map.insert("mint_authority_address", HashMapValue::String(mint_authority_address));
+        map.insert(
+            "mint_authority_address",
+            HashMapValue::String(mint_authority_address),
+        );
     }
 
-    if let Some(allow_external_mint_authority_address) = params.allow_external_mint_authority_address {
-        map.insert("allow_external_mint_authority_address", HashMapValue::Bool(allow_external_mint_authority_address));
+    if let Some(allow_external_mint_authority_address) =
+        params.allow_external_mint_authority_address
+    {
+        map.insert(
+            "allow_external_mint_authority_address",
+            HashMapValue::Bool(allow_external_mint_authority_address),
+        );
     }
 
     if let Some(create_melt) = params.create_melt {
@@ -482,11 +454,19 @@ pub async fn handle_create_token(params: ParamsWalletCreateToken) -> Result<(), 
     }
 
     if let Some(melt_authority_address) = params.melt_authority_address {
-        map.insert("melt_authority_address", HashMapValue::String(melt_authority_address));
+        map.insert(
+            "melt_authority_address",
+            HashMapValue::String(melt_authority_address),
+        );
     }
 
-    if let Some(allow_external_melt_authority_address) = params.allow_external_melt_authority_address {
-        map.insert("allow_external_melt_authority_address", HashMapValue::Bool(allow_external_melt_authority_address));
+    if let Some(allow_external_melt_authority_address) =
+        params.allow_external_melt_authority_address
+    {
+        map.insert(
+            "allow_external_melt_authority_address",
+            HashMapValue::Bool(allow_external_melt_authority_address),
+        );
     }
 
     let text_response = build_client(&params.config)?
@@ -508,7 +488,9 @@ pub async fn handle_create_token(params: ParamsWalletCreateToken) -> Result<(), 
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_mint_tokens(params: ParamsWalletMintTokens) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_mint_tokens(
+    params: ParamsWalletMintTokens,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/mint-tokens")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
@@ -524,11 +506,19 @@ pub async fn handle_mint_tokens(params: ParamsWalletMintTokens) -> Result<(), Bo
     }
 
     if let Some(mint_authority_address) = params.mint_authority_address {
-        map.insert("mint_authority_address", HashMapValue::String(mint_authority_address));
+        map.insert(
+            "mint_authority_address",
+            HashMapValue::String(mint_authority_address),
+        );
     }
 
-    if let Some(allow_external_mint_authority_address) = params.allow_external_mint_authority_address {
-        map.insert("allow_external_mint_authority_address", HashMapValue::Bool(allow_external_mint_authority_address));
+    if let Some(allow_external_mint_authority_address) =
+        params.allow_external_mint_authority_address
+    {
+        map.insert(
+            "allow_external_mint_authority_address",
+            HashMapValue::Bool(allow_external_mint_authority_address),
+        );
     }
 
     let text_response = build_client(&params.config)?
@@ -550,7 +540,9 @@ pub async fn handle_mint_tokens(params: ParamsWalletMintTokens) -> Result<(), Bo
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_melt_tokens(params: ParamsWalletMeltTokens) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_melt_tokens(
+    params: ParamsWalletMeltTokens,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/melt-tokens")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
@@ -566,11 +558,19 @@ pub async fn handle_melt_tokens(params: ParamsWalletMeltTokens) -> Result<(), Bo
     }
 
     if let Some(melt_authority_address) = params.melt_authority_address {
-        map.insert("melt_authority_address", HashMapValue::String(melt_authority_address));
+        map.insert(
+            "melt_authority_address",
+            HashMapValue::String(melt_authority_address),
+        );
     }
 
-    if let Some(allow_external_melt_authority_address) = params.allow_external_melt_authority_address {
-        map.insert("allow_external_melt_authority_address", HashMapValue::Bool(allow_external_melt_authority_address));
+    if let Some(allow_external_melt_authority_address) =
+        params.allow_external_melt_authority_address
+    {
+        map.insert(
+            "allow_external_melt_authority_address",
+            HashMapValue::Bool(allow_external_melt_authority_address),
+        );
     }
 
     let text_response = build_client(&params.config)?
@@ -592,7 +592,9 @@ pub async fn handle_melt_tokens(params: ParamsWalletMeltTokens) -> Result<(), Bo
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_utxo_filter(params: ParamsWalletUtxoFilter) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_utxo_filter(
+    params: ParamsWalletUtxoFilter,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/utxo-filter")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
@@ -610,7 +612,10 @@ pub async fn handle_utxo_filter(params: ParamsWalletUtxoFilter) -> Result<(), Bo
     }
 
     if let Some(amount_smaller_than) = params.amount_smaller_than {
-        map.insert("amount_smaller_than", HashMapValue::Int(amount_smaller_than));
+        map.insert(
+            "amount_smaller_than",
+            HashMapValue::Int(amount_smaller_than),
+        );
     }
 
     if let Some(amount_bigger_than) = params.amount_bigger_than {
@@ -622,7 +627,10 @@ pub async fn handle_utxo_filter(params: ParamsWalletUtxoFilter) -> Result<(), Bo
     }
 
     if let Some(only_available_utxos) = params.only_available_utxos {
-        map.insert("only_available_utxos", HashMapValue::Bool(only_available_utxos));
+        map.insert(
+            "only_available_utxos",
+            HashMapValue::Bool(only_available_utxos),
+        );
     }
 
     let text_response = build_client(&params.config)?
@@ -644,7 +652,9 @@ pub async fn handle_utxo_filter(params: ParamsWalletUtxoFilter) -> Result<(), Bo
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_utxo_consolidation(params: ParamsWalletUtxoConsolidation) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_utxo_consolidation(
+    params: ParamsWalletUtxoConsolidation,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/utxo-consolidation")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
@@ -662,7 +672,10 @@ pub async fn handle_utxo_consolidation(params: ParamsWalletUtxoConsolidation) ->
     }
 
     if let Some(amount_smaller_than) = params.amount_smaller_than {
-        map.insert("amount_smaller_than", HashMapValue::Int(amount_smaller_than));
+        map.insert(
+            "amount_smaller_than",
+            HashMapValue::Int(amount_smaller_than),
+        );
     }
 
     if let Some(amount_bigger_than) = params.amount_bigger_than {
@@ -692,7 +705,9 @@ pub async fn handle_utxo_consolidation(params: ParamsWalletUtxoConsolidation) ->
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_create_nft(params: ParamsWalletCreateNft) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_create_nft(
+    params: ParamsWalletCreateNft,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/create-nft")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
@@ -714,11 +729,19 @@ pub async fn handle_create_nft(params: ParamsWalletCreateNft) -> Result<(), Box<
     }
 
     if let Some(mint_authority_address) = params.mint_authority_address {
-        map.insert("mint_authority_address", HashMapValue::String(mint_authority_address));
+        map.insert(
+            "mint_authority_address",
+            HashMapValue::String(mint_authority_address),
+        );
     }
 
-    if let Some(allow_external_mint_authority_address) = params.allow_external_mint_authority_address {
-        map.insert("allow_external_mint_authority_address", HashMapValue::Bool(allow_external_mint_authority_address));
+    if let Some(allow_external_mint_authority_address) =
+        params.allow_external_mint_authority_address
+    {
+        map.insert(
+            "allow_external_mint_authority_address",
+            HashMapValue::Bool(allow_external_mint_authority_address),
+        );
     }
 
     if let Some(create_melt) = params.create_melt {
@@ -726,11 +749,19 @@ pub async fn handle_create_nft(params: ParamsWalletCreateNft) -> Result<(), Box<
     }
 
     if let Some(melt_authority_address) = params.melt_authority_address {
-        map.insert("melt_authority_address", HashMapValue::String(melt_authority_address));
+        map.insert(
+            "melt_authority_address",
+            HashMapValue::String(melt_authority_address),
+        );
     }
 
-    if let Some(allow_external_melt_authority_address) = params.allow_external_melt_authority_address {
-        map.insert("allow_external_melt_authority_address", HashMapValue::Bool(allow_external_melt_authority_address));
+    if let Some(allow_external_melt_authority_address) =
+        params.allow_external_melt_authority_address
+    {
+        map.insert(
+            "allow_external_melt_authority_address",
+            HashMapValue::Bool(allow_external_melt_authority_address),
+        );
     }
 
     let text_response = build_client(&params.config)?
@@ -767,13 +798,17 @@ pub async fn handle_stop(params: ParamsWalletStop) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
-pub async fn handle_list_tokens(params: ParamsCustomListTokens) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_list_tokens(
+    params: ParamsCustomListTokens,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/tx-history")?;
 
     let mut tokens = HashSet::new();
+    let mut known_addresses = HashSet::new();
+
     let tx_history = build_client(&params.config)?
         .get(url)
-        .header("X-Wallet-Id", params.wallet_id)
+        .header("X-Wallet-Id", params.wallet_id.clone())
         .send()
         .await?
         .json::<Vec<HistoryTx>>()
@@ -782,13 +817,36 @@ pub async fn handle_list_tokens(params: ParamsCustomListTokens) -> Result<(), Bo
     for tx in tx_history.iter() {
         // Find tokens in the outputs
         for output in tx.outputs.iter() {
-            // TODO: check that output.decoded.address existst and is from the wallet
-            tokens.insert(output.token.clone());
+            if let Some(address) = output.decoded.address.clone() {
+                if known_addresses.insert(address.clone()) {
+                    if is_address_mine(params.config.clone(), params.wallet_id.clone(), address)
+                        .await?
+                    {
+                        tokens.insert(output.token.clone());
+                    }
+                }
+            }
+        }
+
+        for input in tx.inputs.iter() {
+            if let Some(address) = input.decoded.address.clone() {
+                if known_addresses.insert(address.clone()) {
+                    if is_address_mine(params.config.clone(), params.wallet_id.clone(), address)
+                        .await?
+                    {
+                        tokens.insert(input.token.clone());
+                    }
+                }
+            }
         }
     }
 
-    let tokens_json = json!(tokens);
+    debug!(
+        "Checked {} addresses while retrieving tokens.",
+        known_addresses.len()
+    );
 
+    let tokens_json = json!(tokens);
     println!("{}", tokens_json.to_string());
     Ok(())
 }

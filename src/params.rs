@@ -1,8 +1,7 @@
-
-
 /////////////////////////////////////////// handlers params
 
 /// The common configuration of all commands in the cli
+#[derive(Clone, Debug)]
 pub struct CliConfig {
     /// The base_url to send requests
     pub host: String,

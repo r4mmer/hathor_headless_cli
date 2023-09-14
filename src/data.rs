@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /////////////////////////////////////////// Data structures
 
@@ -44,4 +44,18 @@ pub struct HistoryTx {
     pub token_name: Option<String>,
     pub token_symbol: Option<String>,
     pub tokens: Option<Vec<String>>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AddressInfoResponse {
+    pub success: bool,
+    // For success messages
+    pub total_amount_received: Option<u32>,
+    pub total_amount_sent: Option<u32>,
+    pub total_amount_available: Option<u32>,
+    pub total_amount_locked: Option<u32>,
+    pub token: Option<String>,
+    pub index: Option<u32>,
+    // For fail messages
+    pub error: Option<String>,
 }
