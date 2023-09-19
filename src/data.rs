@@ -12,8 +12,8 @@ pub struct DecodedOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct HistoryOutput {
-    pub value: u32,
-    pub token_data: u32,
+    pub value: u64,
+    pub token_data: u8,
     pub script: String,
     pub decoded: DecodedOutput,
     pub token: String,
@@ -22,8 +22,8 @@ pub struct HistoryOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct HistoryInput {
-    pub value: u32,
-    pub token_data: u32,
+    pub value: u64,
+    pub token_data: u8,
     pub script: String,
     pub decoded: DecodedOutput,
     pub token: String,
