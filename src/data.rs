@@ -59,3 +59,8 @@ pub struct AddressInfoResponse {
     // For fail messages
     pub error: Option<String>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AddressesResponse {
+    pub addresses: Vec<String>,
+}

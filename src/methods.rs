@@ -4,6 +4,7 @@ use crate::utils::*;
 
 use reqwest::Response;
 
+#[allow(dead_code)]
 pub async fn get_address_info(
     config: CliConfig,
     wallet_id: String,
@@ -25,6 +26,7 @@ pub async fn get_address_info(
     Ok(response)
 }
 
+#[allow(dead_code)]
 pub async fn is_address_mine(
     config: CliConfig,
     wallet_id: String,
@@ -36,4 +38,16 @@ pub async fn is_address_mine(
         .await?;
 
     return Ok(response.success);
+}
+
+pub async fn get_addresses(config: CliConfig, wallet_id: String) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let response = build_client(&config)?
+        .get(build_headless_url(&config.host, "/wallet/addresses")?)
+        .header("X-Wallet-Id", wallet_id)
+        .send()
+        .await?
+        .json::<AddressesResponse>()
+        .await?;
+
+    return Ok(response.addresses);
 }

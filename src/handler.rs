@@ -804,7 +804,6 @@ pub async fn handle_list_tokens(
     let url = build_headless_url(&params.config.host, "/wallet/tx-history")?;
 
     let mut tokens = HashSet::new();
-    let mut known_addresses = HashSet::new();
 
     let tx_history = build_client(&params.config)?
         .get(url)
@@ -814,36 +813,33 @@ pub async fn handle_list_tokens(
         .json::<Vec<HistoryTx>>()
         .await?;
 
+    let mut addresses = get_addresses(params.config.clone(), params.wallet_id.clone()).await?;
+    let known_addresses: HashSet<String> = addresses.drain(..).collect();
+
     for tx in tx_history.iter() {
         // Find tokens in the outputs
         for output in tx.outputs.iter() {
             if let Some(address) = output.decoded.address.clone() {
-                if known_addresses.insert(address.clone()) {
-                    if is_address_mine(params.config.clone(), params.wallet_id.clone(), address)
-                        .await?
-                    {
-                        tokens.insert(output.token.clone());
-                    }
+                if known_addresses.contains(&address) {
+                    // Address is mine, so the token is mine also
+                    tokens.insert(output.token.clone());
                 }
             }
         }
 
         for input in tx.inputs.iter() {
             if let Some(address) = input.decoded.address.clone() {
-                if known_addresses.insert(address.clone()) {
-                    if is_address_mine(params.config.clone(), params.wallet_id.clone(), address)
-                        .await?
-                    {
-                        tokens.insert(input.token.clone());
-                    }
+                if known_addresses.contains(&address) {
+                    // Address is mine, so the token is mine also
+                    tokens.insert(input.token.clone());
                 }
             }
         }
     }
 
     debug!(
-        "Checked {} addresses while retrieving tokens.",
-        known_addresses.len()
+        "Found {} tokens.",
+        tokens.len()
     );
 
     let tokens_json = json!(tokens);
