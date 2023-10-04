@@ -846,3 +846,32 @@ pub async fn handle_list_tokens(
     println!("{}", tokens_json.to_string());
     Ok(())
 }
+
+pub async fn handle_custom_curl(
+    params: ParamsCustomCurl,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(&params.config.host, &params.path.as_str())?;
+
+    let method = if params.post {
+        if params.data {
+            " -X POST -d '{}'"
+        } else {
+            " -X POST"
+        }
+    } else { "" };
+    let mut headers_map = HashMap::<&str, String>::new();
+    headers_map.insert("X-Wallet-Id", params.wallet_id);
+
+    if params.post && params.data {
+        headers_map.insert("Content-Type", "application/json".to_string());
+    }
+
+    let headers = headers_map
+        .iter()
+        .map(|(k, v)| format!("-H \"{}: {}\"", k, v))
+        .collect::<Vec<String>>()
+        .join(" ");
+
+    println!("curl{} {} {}", method, headers, url.to_string());
+    Ok(())
+}

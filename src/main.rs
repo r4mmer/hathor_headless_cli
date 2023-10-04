@@ -70,6 +70,16 @@ enum CustomCommands {
         #[arg(short, long, default_value = "default")]
         wallet_id: String,
     },
+
+    Curl {
+        #[arg(short, long, default_value = "default")]
+        wallet_id: String,
+        #[arg(short, long, default_value_t = false)]
+        post: bool,
+        #[arg(short, long, default_value_t = false)]
+        data: bool,
+        path: String,
+    }
 }
 
 #[derive(Subcommand)]
@@ -255,6 +265,17 @@ async fn handle_custom(
                 wallet_id: wallet_id.to_string(),
             };
             handle_list_tokens(params).await?;
+        }
+
+        CustomCommands::Curl { wallet_id, post, data, path } => {
+            let params = ParamsCustomCurl {
+                config,
+                wallet_id: wallet_id.to_string(),
+                post: *post,
+                data: *data,
+                path: path.to_string(),
+            };
+            handle_custom_curl(params).await?;
         }
     }
 

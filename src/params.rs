@@ -315,3 +315,11 @@ pub struct ParamsCustomListTokens {
     pub config: CliConfig,
     pub wallet_id: String,
 }
+
+pub struct ParamsCustomCurl {
+    pub config: CliConfig,
+    pub wallet_id: String,
+    pub post: bool,
+    pub data: bool,
+    pub path: String,
+}
