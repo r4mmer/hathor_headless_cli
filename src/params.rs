@@ -19,6 +19,14 @@ pub struct ParamsStart {
     pub seed_key: String,
     /// Optional passphrase to use with the given seed
     pub passphrase: Option<String>,
+    /// Address scan policy
+    pub scan_policy: Option<String>,
+    /// Gap limit, only if the scan policy is "gap-limit"
+    pub gap_limit: Option<u32>,
+    /// Policy start index, only if the scan policy is "index-limit"
+    pub policy_start_index: Option<u32>,
+    /// Policy end index, only if the scan policy is "index-limit"
+    pub policy_end_index: Option<u32>,
 }
 
 /// Arguments for the multisig_pubkey command

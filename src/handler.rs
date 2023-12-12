@@ -25,6 +25,22 @@ pub async fn handle_start(params: ParamsStart) -> Result<(), Box<dyn std::error:
         map.insert("passphrase", passphrase);
     }
 
+    if let Some(scan_policy) = params.scan_policy {
+        map.insert("scanPolicy", scan_policy);
+    }
+
+    if let Some(gap_limit) = params.gap_limit {
+        map.insert("gapLimit", gap_limit.to_string());
+    }
+
+    if let Some(policy_start_index) = params.policy_start_index {
+        map.insert("policyStartIndex", policy_start_index.to_string());
+    }
+
+    if let Some(policy_end_index) = params.policy_end_index {
+        map.insert("policyEndIndex", policy_end_index.to_string());
+    }
+
     let url = build_headless_url(&params.config.host, "/start")?;
 
     let text_response = build_client(&params.config)?
@@ -843,14 +859,14 @@ pub async fn handle_list_tokens(
     );
 
     let tokens_json = json!(tokens);
-    println!("{}", tokens_json.to_string());
+    println!("{}", tokens_json);
     Ok(())
 }
 
 pub async fn handle_custom_curl(
     params: ParamsCustomCurl,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let url = build_headless_url(&params.config.host, &params.path.as_str())?;
+    let url = build_headless_url(&params.config.host, params.path.as_str())?;
 
     let method = if params.post {
         if params.data {
@@ -872,6 +888,6 @@ pub async fn handle_custom_curl(
         .collect::<Vec<String>>()
         .join(" ");
 
-    println!("curl{} {} {}", method, headers, url.to_string());
+    println!("curl{} {} {}", method, headers, url);
     Ok(())
 }

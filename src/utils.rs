@@ -21,8 +21,8 @@ use crate::params::*;
 /// let base_url: String = "http://localhost:8000";
 /// let actual_url = build_headless_url(&base_url, "/path/to/api")/
 /// ```
-pub fn build_headless_url(host: &String, path: &str) -> Result<Url, Box<dyn std::error::Error>> {
-    let base_url = Url::parse(&host)?;
+pub fn build_headless_url(host: &str, path: &str) -> Result<Url, Box<dyn std::error::Error>> {
+    let base_url = Url::parse(host)?;
     let url = base_url.join(path)?;
     Ok(url)
 }

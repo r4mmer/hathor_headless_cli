@@ -37,7 +37,7 @@ pub async fn is_address_mine(
         .json::<AddressInfoResponse>()
         .await?;
 
-    return Ok(response.success);
+    Ok(response.success)
 }
 
 pub async fn get_addresses(config: CliConfig, wallet_id: String) -> Result<Vec<String>, Box<dyn std::error::Error>> {
@@ -49,5 +49,5 @@ pub async fn get_addresses(config: CliConfig, wallet_id: String) -> Result<Vec<S
         .json::<AddressesResponse>()
         .await?;
 
-    return Ok(response.addresses);
+    Ok(response.addresses)
 }

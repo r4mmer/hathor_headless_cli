@@ -8,7 +8,7 @@ use handler::*;
 use params::*;
 
 use clap::{self, Parser, Subcommand};
-use env_logger;
+// use env_logger;
 use std::env;
 // use log;
 
@@ -38,6 +38,14 @@ enum Commands {
         seed_key: String,
         #[arg(short, long)]
         passphrase: Option<String>,
+        #[arg(long)]
+        scan_policy: Option<String>,
+        #[arg(long)]
+        gap_limit: Option<u32>,
+        #[arg(long)]
+        policy_start_index: Option<u32>,
+        #[arg(long)]
+        policy_end_index: Option<u32>,
     },
 
     MultisigPubkey {
@@ -79,7 +87,7 @@ enum CustomCommands {
         #[arg(short, long, default_value_t = false)]
         data: bool,
         path: String,
-    }
+    },
 }
 
 #[derive(Subcommand)]
@@ -267,7 +275,12 @@ async fn handle_custom(
             handle_list_tokens(params).await?;
         }
 
-        CustomCommands::Curl { wallet_id, post, data, path } => {
+        CustomCommands::Curl {
+            wallet_id,
+            post,
+            data,
+            path,
+        } => {
             let params = ParamsCustomCurl {
                 config,
                 wallet_id: wallet_id.to_string(),
@@ -567,7 +580,6 @@ async fn handle_wallet(
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
-    let result: Result<(), Box<dyn std::error::Error>>;
 
     let config = CliConfig {
         host: cli.host,
@@ -580,19 +592,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     env_logger::init();
 
-    match &cli.command {
+    let result: Result<(), Box<dyn std::error::Error>> = match &cli.command {
         Some(Commands::Start {
             wallet_id,
             seed_key,
             passphrase,
+            scan_policy,
+            gap_limit,
+            policy_start_index,
+            policy_end_index,
         }) => {
             let params = ParamsStart {
                 config,
                 wallet_id: wallet_id.to_string(),
                 seed_key: seed_key.to_string(),
                 passphrase: passphrase.clone(),
+                scan_policy: scan_policy.clone(),
+                gap_limit: *gap_limit,
+                policy_start_index: *policy_start_index,
+                policy_end_index: *policy_end_index,
             };
-            result = handle_start(params).await;
+            handle_start(params).await
         }
         Some(Commands::MultisigPubkey {
             seed_key,
@@ -603,27 +623,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 seed_key: seed_key.to_string(),
                 passphrase: passphrase.clone(),
             };
-            result = handle_multisig_pubkey(params).await;
+            handle_multisig_pubkey(params).await
         }
         Some(Commands::ConfigurationString { token }) => {
             let params = ParamsConfigString {
                 config,
                 token: token.to_string(),
             };
-            result = handle_configuration_string(params).await;
+            handle_configuration_string(params).await
         }
         Some(Commands::Wallet { wallet_id, command }) => {
-            result = handle_wallet(config, wallet_id.to_string(), command).await;
+            handle_wallet(config, wallet_id.to_string(), command).await
         }
 
         Some(Commands::Custom { command }) => {
-            result = handle_custom(config, command).await;
+            handle_custom(config, command).await
         }
 
         None => {
             return Ok(());
         }
-    }
+    };
 
     if let Err(err) = result {
         println!("{}", err);
