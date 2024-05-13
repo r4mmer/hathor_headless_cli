@@ -66,6 +66,16 @@ enum Commands {
         command: WalletCommands,
     },
 
+    Hsm {
+        #[command(subcommand)]
+        command: HsmCommands,
+    },
+
+    Fireblocks {
+        #[command(subcommand)]
+        command: FireblocksCommands,
+    },
+
     Custom {
         #[command(subcommand)]
         command: CustomCommands,
@@ -88,6 +98,28 @@ enum CustomCommands {
         data: bool,
         path: String,
     },
+}
+
+#[derive(Subcommand)]
+enum HsmCommands {
+    Start {
+        hsm_key: String,
+
+        #[arg(long, default_value = "default")]
+        wallet_id: String,
+        // Other start arguments are still not supported in the headless
+    }
+}
+
+#[derive(Subcommand)]
+enum FireblocksCommands {
+    Start {
+        xpub: String,
+
+        #[arg(long, default_value = "default")]
+        wallet_id: String,
+        // Other start arguments are still not supported in the headless
+    }
 }
 
 #[derive(Subcommand)]
@@ -289,6 +321,42 @@ async fn handle_custom(
                 path: path.to_string(),
             };
             handle_custom_curl(params).await?;
+        }
+    }
+
+    Ok(())
+}
+
+async fn handle_hsm(
+    config: CliConfig,
+    hsm_cmd: &HsmCommands,
+) -> Result<(), Box<dyn std::error::Error>> {
+    match hsm_cmd {
+        HsmCommands::Start { wallet_id, hsm_key } => {
+            let params = ParamsHsmStart {
+                config,
+                wallet_id: wallet_id.to_string(),
+                hsm_key: hsm_key.to_string(),
+            };
+            handle_hsm_start(params).await?;
+        }
+    }
+
+    Ok(())
+}
+
+async fn handle_fireblocks(
+    config: CliConfig,
+    fb_cmd: &FireblocksCommands,
+) -> Result<(), Box<dyn std::error::Error>> {
+    match fb_cmd {
+        FireblocksCommands::Start { wallet_id, xpub } => {
+            let params = ParamsFireblocksStart {
+                config,
+                wallet_id: wallet_id.to_string(),
+                xpub: xpub.to_string(),
+            };
+            handle_fireblocks_start(params).await?;
         }
     }
 
@@ -634,6 +702,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Some(Commands::Wallet { wallet_id, command }) => {
             handle_wallet(config, wallet_id.to_string(), command).await
+        }
+
+        Some(Commands::Hsm { command }) => {
+            handle_hsm(config, command).await
+        }
+
+        Some(Commands::Fireblocks { command }) => {
+            handle_fireblocks(config, command).await
         }
 
         Some(Commands::Custom { command }) => {

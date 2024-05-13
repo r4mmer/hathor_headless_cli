@@ -29,6 +29,26 @@ pub struct ParamsStart {
     pub policy_end_index: Option<u32>,
 }
 
+/// Arguments for the HSM start command
+pub struct ParamsHsmStart {
+    /// Common config
+    pub config: CliConfig,
+    /// wallet-id used to name the wallet for subsequent calls
+    pub wallet_id: String,
+    /// seed-key used to generate the wallet
+    pub hsm_key: String,
+}
+
+/// Arguments for the Fireblocks start command
+pub struct ParamsFireblocksStart {
+    /// Common config
+    pub config: CliConfig,
+    /// wallet-id used to name the wallet for subsequent calls
+    pub wallet_id: String,
+    /// xpub used to generate the wallet
+    pub xpub: String,
+}
+
 /// Arguments for the multisig_pubkey command
 pub struct ParamsMultisigPubkey {
     /// Common config

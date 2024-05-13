@@ -55,6 +55,56 @@ pub async fn handle_start(params: ParamsStart) -> Result<(), Box<dyn std::error:
     Ok(())
 }
 
+/// Start an HSM wallet
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
+pub async fn handle_hsm_start(params: ParamsHsmStart) -> Result<(), Box<dyn std::error::Error>> {
+    let mut map = HashMap::new();
+    map.insert("hsm-key", params.hsm_key);
+    map.insert("wallet-id", params.wallet_id);
+
+    let url = build_headless_url(&params.config.host, "/hsm/start")?;
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .json(&map)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
+    Ok(())
+}
+
+/// Start a Fireblocks wallet
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
+pub async fn handle_fireblocks_start(params: ParamsFireblocksStart) -> Result<(), Box<dyn std::error::Error>> {
+    let mut map = HashMap::new();
+    map.insert("xpub", params.xpub);
+    map.insert("wallet-id", params.wallet_id);
+
+    let url = build_headless_url(&params.config.host, "/fireblocks/start")?;
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .json(&map)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
+    Ok(())
+}
+
 /// Get the configuration string of a token
 ///
 /// # Arguments
