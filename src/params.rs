@@ -216,6 +216,7 @@ pub struct ParamsWalletCreateToken {
     pub melt_authority_address: Option<String>,
     /// Flag to allow sending the melt authority to an address not from the wallet
     pub allow_external_melt_authority_address: Option<bool>,
+    pub data: Option<Vec<String>>,
 }
 
 /// Arguments for the wallet mint tokens command
@@ -236,6 +237,8 @@ pub struct ParamsWalletMintTokens {
     pub mint_authority_address: Option<String>,
     /// Flag to allow sending the mint authority to an address not from the wallet
     pub allow_external_mint_authority_address: Option<bool>,
+    pub unshift_data: Option<bool>,
+    pub data: Option<Vec<String>>,
 }
 
 /// Arguments for the wallet melt tokens command
@@ -258,6 +261,8 @@ pub struct ParamsWalletMeltTokens {
     pub melt_authority_address: Option<String>,
     /// Flag to allow sending the melt authority to an address not from the wallet
     pub allow_external_melt_authority_address: Option<bool>,
+    pub unshift_data: Option<bool>,
+    pub data: Option<Vec<String>>,
 }
 
 /// Arguments for the wallet utxo filter command

@@ -535,6 +535,11 @@ pub async fn handle_create_token(
         );
     }
 
+    if let Some(data) = params.data
+    {
+        map.insert("data", HashMapValue::List(data.iter().map(|s| HashMapValue::String(s.clone())).collect()));
+    }
+
     let text_response = build_client(&params.config)?
         .post(url)
         .header("X-Wallet-Id", params.wallet_id)
@@ -587,6 +592,16 @@ pub async fn handle_mint_tokens(
         );
     }
 
+    if let Some(unshift_data) = params.unshift_data
+    {
+        map.insert("unshift_data", HashMapValue::Bool(unshift_data));
+    }
+
+    if let Some(data) = params.data
+    {
+        map.insert("data", HashMapValue::List(data.iter().map(|s| HashMapValue::String(s.clone())).collect()));
+    }
+
     let text_response = build_client(&params.config)?
         .post(url)
         .header("X-Wallet-Id", params.wallet_id)
@@ -637,6 +652,16 @@ pub async fn handle_melt_tokens(
             "allow_external_melt_authority_address",
             HashMapValue::Bool(allow_external_melt_authority_address),
         );
+    }
+
+    if let Some(unshift_data) = params.unshift_data
+    {
+        map.insert("unshiftData", HashMapValue::Bool(unshift_data));
+    }
+
+    if let Some(data) = params.data
+    {
+        map.insert("data", HashMapValue::List(data.iter().map(|s| HashMapValue::String(s.clone())).collect()));
     }
 
     let text_response = build_client(&params.config)?

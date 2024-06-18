@@ -45,4 +45,5 @@ pub enum HashMapValue {
     Int(u32),
     String(String),
     Bool(bool),
+    List(Vec<HashMapValue>),
 }

@@ -206,6 +206,8 @@ enum WalletCommands {
         melt_authority_address: Option<String>,
         #[arg(long)]
         allow_external_melt_authority_address: Option<bool>,
+        #[arg(short, long)]
+        data: Option<Vec<String>>,
     },
 
     MintTokens {
@@ -219,6 +221,10 @@ enum WalletCommands {
         mint_authority_address: Option<String>,
         #[arg(long)]
         allow_external_mint_authority_address: Option<bool>,
+        #[arg(short, long)]
+        unshift_data: Option<bool>,
+        #[arg(short, long)]
+        data: Option<Vec<String>>,
     },
 
     MeltTokens {
@@ -234,6 +240,10 @@ enum WalletCommands {
         melt_authority_address: Option<String>,
         #[arg(long)]
         allow_external_melt_authority_address: Option<bool>,
+        #[arg(short, long)]
+        unshift_data: Option<bool>,
+        #[arg(short, long)]
+        data: Option<Vec<String>>,
     },
 
     UtxoFilter {
@@ -494,6 +504,7 @@ async fn handle_wallet(
             create_melt,
             melt_authority_address,
             allow_external_melt_authority_address,
+            data,
         } => {
             let params = ParamsWalletCreateToken {
                 config,
@@ -509,6 +520,7 @@ async fn handle_wallet(
                 create_melt: *create_melt,
                 melt_authority_address: melt_authority_address.clone(),
                 allow_external_melt_authority_address: *allow_external_melt_authority_address,
+                data: data.clone(),
             };
             handle_create_token(params).await?;
         }
@@ -520,6 +532,8 @@ async fn handle_wallet(
             change_address,
             mint_authority_address,
             allow_external_mint_authority_address,
+            unshift_data,
+            data,
         } => {
             let params = ParamsWalletMintTokens {
                 config,
@@ -530,6 +544,8 @@ async fn handle_wallet(
                 change_address: change_address.clone(),
                 mint_authority_address: mint_authority_address.clone(),
                 allow_external_mint_authority_address: *allow_external_mint_authority_address,
+                unshift_data: *unshift_data,
+                data: data.clone(),
             };
             handle_mint_tokens(params).await?;
         }
@@ -542,6 +558,8 @@ async fn handle_wallet(
             change_address,
             melt_authority_address,
             allow_external_melt_authority_address,
+            unshift_data,
+            data,
         } => {
             let params = ParamsWalletMeltTokens {
                 config,
@@ -553,6 +571,8 @@ async fn handle_wallet(
                 change_address: change_address.clone(),
                 melt_authority_address: melt_authority_address.clone(),
                 allow_external_melt_authority_address: *allow_external_melt_authority_address,
+                unshift_data: *unshift_data,
+                data: data.clone(),
             };
             handle_melt_tokens(params).await?;
         }
