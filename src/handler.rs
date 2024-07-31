@@ -41,6 +41,10 @@ pub async fn handle_start(params: ParamsStart) -> Result<(), Box<dyn std::error:
         map.insert("policyEndIndex", policy_end_index.to_string());
     }
 
+    if let Some(history_sync_mode) = params.history_sync_mode {
+        map.insert("history_sync_mode", history_sync_mode);
+    }
+
     let url = build_headless_url(&params.config.host, "/start")?;
 
     let text_response = build_client(&params.config)?
@@ -86,7 +90,9 @@ pub async fn handle_hsm_start(params: ParamsHsmStart) -> Result<(), Box<dyn std:
 ///
 /// * `params` - arguments to configure the call being made
 ///
-pub async fn handle_fireblocks_start(params: ParamsFireblocksStart) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_fireblocks_start(
+    params: ParamsFireblocksStart,
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut map = HashMap::new();
     map.insert("xpub", params.xpub);
     map.insert("wallet-id", params.wallet_id);
@@ -535,9 +541,15 @@ pub async fn handle_create_token(
         );
     }
 
-    if let Some(data) = params.data
-    {
-        map.insert("data", HashMapValue::List(data.iter().map(|s| HashMapValue::String(s.clone())).collect()));
+    if let Some(data) = params.data {
+        map.insert(
+            "data",
+            HashMapValue::List(
+                data.iter()
+                    .map(|s| HashMapValue::String(s.clone()))
+                    .collect(),
+            ),
+        );
     }
 
     let text_response = build_client(&params.config)?
@@ -592,14 +604,19 @@ pub async fn handle_mint_tokens(
         );
     }
 
-    if let Some(unshift_data) = params.unshift_data
-    {
+    if let Some(unshift_data) = params.unshift_data {
         map.insert("unshift_data", HashMapValue::Bool(unshift_data));
     }
 
-    if let Some(data) = params.data
-    {
-        map.insert("data", HashMapValue::List(data.iter().map(|s| HashMapValue::String(s.clone())).collect()));
+    if let Some(data) = params.data {
+        map.insert(
+            "data",
+            HashMapValue::List(
+                data.iter()
+                    .map(|s| HashMapValue::String(s.clone()))
+                    .collect(),
+            ),
+        );
     }
 
     let text_response = build_client(&params.config)?
@@ -654,14 +671,19 @@ pub async fn handle_melt_tokens(
         );
     }
 
-    if let Some(unshift_data) = params.unshift_data
-    {
+    if let Some(unshift_data) = params.unshift_data {
         map.insert("unshiftData", HashMapValue::Bool(unshift_data));
     }
 
-    if let Some(data) = params.data
-    {
-        map.insert("data", HashMapValue::List(data.iter().map(|s| HashMapValue::String(s.clone())).collect()));
+    if let Some(data) = params.data {
+        map.insert(
+            "data",
+            HashMapValue::List(
+                data.iter()
+                    .map(|s| HashMapValue::String(s.clone()))
+                    .collect(),
+            ),
+        );
     }
 
     let text_response = build_client(&params.config)?
@@ -928,10 +950,7 @@ pub async fn handle_list_tokens(
         }
     }
 
-    debug!(
-        "Found {} tokens.",
-        tokens.len()
-    );
+    debug!("Found {} tokens.", tokens.len());
 
     let tokens_json = json!(tokens);
     println!("{}", tokens_json);
@@ -949,7 +968,9 @@ pub async fn handle_custom_curl(
         } else {
             " -X POST"
         }
-    } else { "" };
+    } else {
+        ""
+    };
     let mut headers_map = HashMap::<&str, String>::new();
     headers_map.insert("X-Wallet-Id", params.wallet_id);
 

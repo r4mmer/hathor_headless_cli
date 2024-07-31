@@ -27,6 +27,8 @@ pub struct ParamsStart {
     pub policy_start_index: Option<u32>,
     /// Policy end index, only if the scan policy is "index-limit"
     pub policy_end_index: Option<u32>,
+    /// History sync mode
+    pub history_sync_mode: Option<String>,
 }
 
 /// Arguments for the HSM start command

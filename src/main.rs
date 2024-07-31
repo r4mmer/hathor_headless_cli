@@ -46,6 +46,8 @@ enum Commands {
         policy_start_index: Option<u32>,
         #[arg(long)]
         policy_end_index: Option<u32>,
+        #[arg(long)]
+        history_sync_mode: Option<String>,
     },
 
     MultisigPubkey {
@@ -108,7 +110,7 @@ enum HsmCommands {
         #[arg(long, default_value = "default")]
         wallet_id: String,
         // Other start arguments are still not supported in the headless
-    }
+    },
 }
 
 #[derive(Subcommand)]
@@ -119,7 +121,7 @@ enum FireblocksCommands {
         #[arg(long, default_value = "default")]
         wallet_id: String,
         // Other start arguments are still not supported in the headless
-    }
+    },
 }
 
 #[derive(Subcommand)]
@@ -689,6 +691,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             gap_limit,
             policy_start_index,
             policy_end_index,
+            history_sync_mode,
         }) => {
             let params = ParamsStart {
                 config,
@@ -699,6 +702,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 gap_limit: *gap_limit,
                 policy_start_index: *policy_start_index,
                 policy_end_index: *policy_end_index,
+                history_sync_mode: history_sync_mode.clone(),
             };
             handle_start(params).await
         }
@@ -724,17 +728,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             handle_wallet(config, wallet_id.to_string(), command).await
         }
 
-        Some(Commands::Hsm { command }) => {
-            handle_hsm(config, command).await
-        }
+        Some(Commands::Hsm { command }) => handle_hsm(config, command).await,
 
-        Some(Commands::Fireblocks { command }) => {
-            handle_fireblocks(config, command).await
-        }
+        Some(Commands::Fireblocks { command }) => handle_fireblocks(config, command).await,
 
-        Some(Commands::Custom { command }) => {
-            handle_custom(config, command).await
-        }
+        Some(Commands::Custom { command }) => handle_custom(config, command).await,
 
         None => {
             return Ok(());
