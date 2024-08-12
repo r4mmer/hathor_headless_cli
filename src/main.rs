@@ -31,35 +31,56 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Start a wallet
     Start {
+        /// Wallet id to use (all commands for this wallet will require this id)
         #[arg(long, default_value = "default")]
         wallet_id: String,
+        /// Key of the seed (on `seeds` in the config)
         #[arg(long, default_value = "default")]
         seed_key: String,
+        /// Add this passphrase to the seed (will generate a new wallet with new addresses)
         #[arg(short, long)]
         passphrase: Option<String>,
+        /// Use this address scanning policy (defaults to `gap-limit`)
         #[arg(long)]
         scan_policy: Option<String>,
+        /// [scan-policy: gap-limit] Always keep `value` addresses without transaction ready.
         #[arg(long)]
         gap_limit: Option<u32>,
+        /// [scan-policy: index-limit] Start generating addresses from this address.
         #[arg(long)]
         policy_start_index: Option<u32>,
+        /// [scan-policy: index-limit] Stop generating addresses at this address.
         #[arg(long)]
         policy_end_index: Option<u32>,
+        /// Use this history sync mode, default is polling_http_api (polling_http_api | xpub_stream_ws | manual_stream_ws)
         #[arg(long)]
         history_sync_mode: Option<String>,
+        /// Start a multisig wallet
+        #[arg(long)]
+        multisig: Option<bool>,
+        /// Key of the multisig config (on `multisig` in the config)
+        #[arg(long)]
+        multisig_key: Option<String>,
     },
 
+    /// Get the p2sh xpubkey of a configured seed (does not require a started wallet)
     MultisigPubkey {
+        /// Which seed to derive the xpubkey
         seed_key: String,
+        /// Add this passphrase to the seed
         #[arg(short, long)]
         passphrase: Option<String>,
     },
 
+    /// Fetch the configuration string of a token
     ConfigurationString {
+        /// Token UID (hex encoded)
         token: String,
     },
 
+    /// Wallet commands (requires a started wallet)
     Wallet {
         #[arg(short, long, default_value = "default")]
         wallet_id: String,
@@ -68,16 +89,19 @@ enum Commands {
         command: WalletCommands,
     },
 
+    /// Start a Dinamo Networks HSM wallet (requires special configuration)
     Hsm {
         #[command(subcommand)]
         command: HsmCommands,
     },
 
+    /// Start a Fireblocks wallet (requires special configuration)
     Fireblocks {
         #[command(subcommand)]
         command: FireblocksCommands,
     },
 
+    /// Some custom commands and scripts (may require multiple calls)
     Custom {
         #[command(subcommand)]
         command: CustomCommands,
@@ -86,11 +110,13 @@ enum Commands {
 
 #[derive(Subcommand)]
 enum CustomCommands {
+    /// List all tokens on the wallet history
     ListTokens {
         #[arg(short, long, default_value = "default")]
         wallet_id: String,
     },
 
+    /// Make an http request (simple helper)
     Curl {
         #[arg(short, long, default_value = "default")]
         wallet_id: String,
@@ -104,62 +130,78 @@ enum CustomCommands {
 
 #[derive(Subcommand)]
 enum HsmCommands {
+    /// Start a Dinamo Networks HSM wallet (requires special configuration)
     Start {
+        /// HSM key
         hsm_key: String,
 
+        /// Wallet id to use (all commands for this wallet will require this id)
         #[arg(long, default_value = "default")]
         wallet_id: String,
-        // Other start arguments are still not supported in the headless
     },
 }
 
 #[derive(Subcommand)]
 enum FireblocksCommands {
     Start {
+        /// xpubkey of the fireblocks wallet
         xpub: String,
 
+        /// Wallet id to use (all commands for this wallet will require this id)
         #[arg(long, default_value = "default")]
         wallet_id: String,
-        // Other start arguments are still not supported in the headless
     },
 }
 
 #[derive(Subcommand)]
 enum WalletCommands {
+    /// Wallet balance for a token
     Balance {
+        /// Token UID (defaults to 00 [HTR])
         #[arg(short, long)]
         token: Option<String>,
     },
 
+    /// Wallet status
     Status {},
 
+    /// Fetch an address from the wallet
     Address {
+        /// Get address on this derivation index
         #[arg(short, long)]
         index: Option<u32>,
 
+        /// Mark address as used (next call will generate another one)
         #[arg(short, long)]
         mark_as_used: Option<bool>,
     },
 
+    /// Get derivation index of an address
     AddressIndex {
         address: String,
     },
 
+    /// Fetch all wallet addresses
     Addresses {},
 
+    /// Fetch address info (for a token)
     AddressInfo {
         address: String,
 
+        /// Token UID (defaults to 00 [HTR])
         #[arg(short, long)]
         token: Option<String>,
     },
 
+    /// Fetch wallet's tx history
     TxHistory {
         #[arg(short, long)]
         limit: Option<u32>,
     },
 
+    /// Fetch transaction (only if transaction is on the wallet's history)
     Transaction {
+        /// Tx ID (hex encoded)
         id: String,
     },
 
@@ -171,66 +213,97 @@ enum WalletCommands {
         partial_tx: Option<String>,
     },
 
+    /// Get number of blocks confirming this tx.
     TxConfirmation {
         id: String,
     },
 
+    /// Send a simple transaction
     SimpleSend {
+        /// Address (base58 encoded)
         address: String,
+        /// Amount of tokens to send
         value: u32,
         #[arg(short, long)]
         change_address: Option<String>,
+        /// Token UID (hex encoded)
         #[arg(short, long)]
         token: Option<String>,
     },
 
+    /// Send a complex transaction
     Send {
+        /// { outputs: [{address, value, token?, type?, data?, timelock?}, inputs?: {type, index, hash}], change_address }
+        /// Json encoded
         body: String,
     },
 
+    /// Send a transaction to create a new token
     CreateToken {
+        /// Token name
         name: String,
+        /// Token symbol
         symbol: String,
+        /// Amount to create
         amount: u32,
+        /// Address to send created tokens (base58 encoded)
         #[arg(long)]
         address: Option<String>,
         #[arg(long)]
         change_address: Option<String>,
+        /// If a mint authority should be created (default: true)
         #[arg(long)]
         create_mint: Option<bool>,
+        /// Send the mint authority to this address (base58 encoded)
         #[arg(long)]
         mint_authority_address: Option<String>,
+        /// If we should allow an address not from the wallet as `mint_authority_address`
         #[arg(long)]
         allow_external_mint_authority_address: Option<bool>,
+        /// If a melt authority should be created (default: true)
         #[arg(long)]
         create_melt: Option<bool>,
+        /// Send the melt authority to this address (base58 encoded)
         #[arg(long)]
         melt_authority_address: Option<String>,
+        /// If we should allow an address not from the wallet as `melt_authority_address`
         #[arg(long)]
         allow_external_melt_authority_address: Option<bool>,
+        /// List of data outputs to include in the transaction
         #[arg(short, long)]
         data: Option<Vec<String>>,
     },
 
+    /// Send a transaction to mint more tokens (requires ownership of a mint authority output)
     MintTokens {
+        /// Token UID (hex encoded)
         token: String,
+        /// Amount to mint
         amount: u32,
+        /// Address to send new tokens (base58 encoded)
         #[arg(long)]
         address: Option<String>,
         #[arg(long)]
         change_address: Option<String>,
+        /// Send the mint authority to this address (base58 encoded)
         #[arg(long)]
         mint_authority_address: Option<String>,
+        /// If we should allow an address not from the wallet as `mint_authority_address`
         #[arg(long)]
         allow_external_mint_authority_address: Option<bool>,
+        /// Insert data outputs at the beggining of the array
         #[arg(short, long)]
         unshift_data: Option<bool>,
+        /// List of data outputs to include in the transaction
         #[arg(short, long)]
         data: Option<Vec<String>>,
     },
 
+    /// Send a transaction to melt tokens (requires ownership of a melt authority output)
     MeltTokens {
+        /// Token UID (hex encoded)
         token: String,
+        /// Amount to melt
         amount: u32,
         #[arg(long)]
         address: Option<String>,
@@ -238,12 +311,16 @@ enum WalletCommands {
         deposit_address: Option<String>,
         #[arg(long)]
         change_address: Option<String>,
+        /// Send the melt authority to this address (base58 encoded)
         #[arg(long)]
         melt_authority_address: Option<String>,
+        /// If we should allow an address not from the wallet as `melt_authority_address`
         #[arg(long)]
         allow_external_melt_authority_address: Option<bool>,
+        /// Insert data outputs at the beggining of the array
         #[arg(short, long)]
         unshift_data: Option<bool>,
+        /// List of data outputs to include in the transaction
         #[arg(short, long)]
         data: Option<Vec<String>>,
     },
@@ -304,6 +381,92 @@ enum WalletCommands {
     },
 
     Stop {},
+
+    P2sh {
+        #[command(subcommand)]
+        command: P2shTxProposalCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum P2shTxProposalCommands {
+    Build {
+        /// { outputs: [{ address, value, token? }], inputs?: [{tx_id, index}], change_address? }
+        body: String,
+    },
+
+    // CreateToken {
+    //     name: String,
+    //     symbol: String,
+    //     amount: u32,
+    //     #[arg(long)]
+    //     address: Option<String>,
+    //     #[arg(long)]
+    //     change_address: Option<String>,
+    //     #[arg(long)]
+    //     create_mint: Option<bool>,
+    //     #[arg(long)]
+    //     mint_authority_address: Option<String>,
+    //     #[arg(long)]
+    //     allow_external_mint_authority_address: Option<bool>,
+    //     #[arg(long)]
+    //     create_melt: Option<bool>,
+    //     #[arg(long)]
+    //     melt_authority_address: Option<String>,
+    //     #[arg(long)]
+    //     allow_external_melt_authority_address: Option<bool>,
+    //     #[arg(short, long)]
+    //     data: Option<Vec<String>>,
+    // },
+    //
+    // MintTokens {
+    //     token: String,
+    //     amount: u32,
+    //     #[arg(long)]
+    //     address: Option<String>,
+    //     #[arg(long)]
+    //     change_address: Option<String>,
+    //     #[arg(long)]
+    //     mint_authority_address: Option<String>,
+    //     #[arg(long)]
+    //     allow_external_mint_authority_address: Option<bool>,
+    //     #[arg(short, long)]
+    //     unshift_data: Option<bool>,
+    //     #[arg(short, long)]
+    //     data: Option<Vec<String>>,
+    // },
+    //
+    // MeltTokens {
+    //     token: String,
+    //     amount: u32,
+    //     #[arg(long)]
+    //     address: Option<String>,
+    //     #[arg(long)]
+    //     deposit_address: Option<String>,
+    //     #[arg(long)]
+    //     change_address: Option<String>,
+    //     #[arg(long)]
+    //     melt_authority_address: Option<String>,
+    //     #[arg(long)]
+    //     allow_external_melt_authority_address: Option<bool>,
+    //     #[arg(short, long)]
+    //     unshift_data: Option<bool>,
+    //     #[arg(short, long)]
+    //     data: Option<Vec<String>>,
+    // },
+    GetMySignatures {
+        tx_hex: String,
+    },
+
+    Sign {
+        tx_hex: String,
+        signatures: Vec<String>,
+    },
+
+    SignAndPush {
+        tx_hex: String,
+        signatures: Vec<String>,
+    },
 }
 
 async fn handle_custom(
@@ -369,6 +532,55 @@ async fn handle_fireblocks(
                 xpub: xpub.to_string(),
             };
             handle_fireblocks_start(params).await?;
+        }
+    }
+
+    Ok(())
+}
+
+async fn handle_p2sh_txproposal(
+    config: CliConfig,
+    wallet_id: String,
+    command: &P2shTxProposalCommands,
+) -> Result<(), Box<dyn std::error::Error>> {
+    match command {
+        P2shTxProposalCommands::Build { body } => {
+            // handle build
+            let params = ParamsP2shTxProposalBuild {
+                config,
+                wallet_id,
+                body: body.to_string(),
+            };
+            handle_p2sh_txproposal_build(params).await?;
+        }
+
+        P2shTxProposalCommands::GetMySignatures { tx_hex } => {
+            let params = ParamsP2shTxProposalGetMySignatures {
+                config,
+                wallet_id,
+                tx_hex: tx_hex.clone(),
+            };
+            handle_p2sh_txproposal_get_my_signatures(params).await?;
+        }
+
+        P2shTxProposalCommands::Sign { tx_hex, signatures } => {
+            let params = ParamsP2shTxProposalSign {
+                config,
+                wallet_id,
+                tx_hex: tx_hex.clone(),
+                signatures: signatures.clone(),
+            };
+            handle_p2sh_txproposal_sign(params).await?;
+        }
+
+        P2shTxProposalCommands::SignAndPush { tx_hex, signatures } => {
+            let params = ParamsP2shTxProposalSign {
+                config,
+                wallet_id,
+                tx_hex: tx_hex.clone(),
+                signatures: signatures.clone(),
+            };
+            handle_p2sh_txproposal_sign_and_push(params).await?;
         }
     }
 
@@ -660,6 +872,10 @@ async fn handle_wallet(
             let params = ParamsWalletStop { config, wallet_id };
             handle_stop(params).await?;
         }
+
+        WalletCommands::P2sh { command } => {
+            handle_p2sh_txproposal(config, wallet_id, command).await?;
+        }
     }
 
     Ok(())
@@ -692,6 +908,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             policy_start_index,
             policy_end_index,
             history_sync_mode,
+            multisig,
+            multisig_key,
         }) => {
             let params = ParamsStart {
                 config,
@@ -703,6 +921,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 policy_start_index: *policy_start_index,
                 policy_end_index: *policy_end_index,
                 history_sync_mode: history_sync_mode.clone(),
+                multisig: *multisig,
+                multisig_key: multisig_key.clone(),
             };
             handle_start(params).await
         }

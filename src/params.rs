@@ -29,6 +29,11 @@ pub struct ParamsStart {
     pub policy_end_index: Option<u32>,
     /// History sync mode
     pub history_sync_mode: Option<String>,
+    /// Multisig, if we want to start a multisig wallet
+    pub multisig: Option<bool>,
+    /// Multisig key, use this key on the multisig config instead of the seed-key
+    pub multisig_key: Option<String>,
+    // xpubkey, seed, precalculatedAddresses?
 }
 
 /// Arguments for the HSM start command
@@ -357,4 +362,22 @@ pub struct ParamsCustomCurl {
     pub post: bool,
     pub data: bool,
     pub path: String,
+}
+
+pub struct ParamsP2shTxProposalBuild {
+    pub config: CliConfig,
+    pub wallet_id: String,
+    pub body: String,
+}
+
+pub struct ParamsP2shTxProposalGetMySignatures {
+    pub config: CliConfig,
+    pub wallet_id: String,
+    pub tx_hex: String,
+}
+pub struct ParamsP2shTxProposalSign {
+    pub config: CliConfig,
+    pub wallet_id: String,
+    pub tx_hex: String,
+    pub signatures: Vec<String>,
 }

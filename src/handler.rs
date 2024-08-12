@@ -17,32 +17,40 @@ use serde_json::json;
 /// * `params` - arguments to configure the call being made
 ///
 pub async fn handle_start(params: ParamsStart) -> Result<(), Box<dyn std::error::Error>> {
-    let mut map = HashMap::new();
-    map.insert("seedKey", params.seed_key);
-    map.insert("wallet-id", params.wallet_id);
+    let mut map: HashMap<&str, HashMapValue> = HashMap::new();
+    map.insert("seedKey", HashMapValue::String(params.seed_key));
+    map.insert("wallet-id", HashMapValue::String(params.wallet_id));
 
     if let Some(passphrase) = params.passphrase {
-        map.insert("passphrase", passphrase);
+        map.insert("passphrase", HashMapValue::String(passphrase));
     }
 
     if let Some(scan_policy) = params.scan_policy {
-        map.insert("scanPolicy", scan_policy);
+        map.insert("scanPolicy", HashMapValue::String(scan_policy));
     }
 
     if let Some(gap_limit) = params.gap_limit {
-        map.insert("gapLimit", gap_limit.to_string());
+        map.insert("gapLimit", HashMapValue::Int(gap_limit));
     }
 
     if let Some(policy_start_index) = params.policy_start_index {
-        map.insert("policyStartIndex", policy_start_index.to_string());
+        map.insert("policyStartIndex", HashMapValue::Int(policy_start_index));
     }
 
     if let Some(policy_end_index) = params.policy_end_index {
-        map.insert("policyEndIndex", policy_end_index.to_string());
+        map.insert("policyEndIndex", HashMapValue::Int(policy_end_index));
     }
 
     if let Some(history_sync_mode) = params.history_sync_mode {
-        map.insert("history_sync_mode", history_sync_mode);
+        map.insert("history_sync_mode", HashMapValue::String(history_sync_mode));
+    }
+
+    if let Some(multisig) = params.multisig {
+        map.insert("multisig", HashMapValue::Bool(multisig));
+
+        if let Some(multisig_key) = params.multisig_key {
+            map.insert("multisigKey", HashMapValue::String(multisig_key));
+        }
     }
 
     let url = build_headless_url(&params.config.host, "/start")?;
@@ -462,12 +470,11 @@ pub async fn handle_simple_send(
 pub async fn handle_send(params: ParamsWalletSend) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/send-tx")?;
 
-    // .header(header::CONTENT_TYPE, "application/json")
-    // .body(params.body)
     let text_response = build_client(&params.config)?
         .post(url)
         .header("X-Wallet-Id", params.wallet_id)
-        .json(&params.body)
+        .header("Content-Type", "application/json")
+        .body(params.body)
         .send()
         .await?
         .text()
@@ -985,5 +992,113 @@ pub async fn handle_custom_curl(
         .join(" ");
 
     println!("curl{} {} {}", method, headers, url);
+    Ok(())
+}
+
+pub async fn handle_p2sh_txproposal_build(
+    params: ParamsP2shTxProposalBuild,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(&params.config.host, "/wallet/p2sh/tx-proposal")?;
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .header("X-Wallet-Id", params.wallet_id)
+        .header("Content-Type", "application/json")
+        .body(params.body)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
+    Ok(())
+}
+
+pub async fn handle_p2sh_txproposal_get_my_signatures(
+    params: ParamsP2shTxProposalGetMySignatures,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(
+        &params.config.host,
+        "/wallet/p2sh/tx-proposal/get-my-signatures",
+    )?;
+
+    let mut map: HashMap<&str, HashMapValue> = HashMap::new();
+    map.insert("txHex", HashMapValue::String(params.tx_hex));
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .header("X-Wallet-Id", params.wallet_id)
+        .json(&map)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
+    Ok(())
+}
+
+pub async fn handle_p2sh_txproposal_sign(
+    params: ParamsP2shTxProposalSign,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(&params.config.host, "/wallet/p2sh/tx-proposal/sign")?;
+
+    let mut map: HashMap<&str, HashMapValue> = HashMap::new();
+    map.insert("txHex", HashMapValue::String(params.tx_hex));
+    map.insert(
+        "signatures",
+        HashMapValue::List(
+            params
+                .signatures
+                .iter()
+                .map(|s| HashMapValue::String(s.clone()))
+                .collect(),
+        ),
+    );
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .header("X-Wallet-Id", params.wallet_id)
+        .json(&map)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
+    Ok(())
+}
+
+pub async fn handle_p2sh_txproposal_sign_and_push(
+    params: ParamsP2shTxProposalSign,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(
+        &params.config.host,
+        "/wallet/p2sh/tx-proposal/sign-and-push",
+    )?;
+
+    let mut map: HashMap<&str, HashMapValue> = HashMap::new();
+    map.insert("txHex", HashMapValue::String(params.tx_hex));
+    map.insert(
+        "signatures",
+        HashMapValue::List(
+            params
+                .signatures
+                .iter()
+                .map(|s| HashMapValue::String(s.clone()))
+                .collect(),
+        ),
+    );
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .header("X-Wallet-Id", params.wallet_id)
+        .json(&map)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
     Ok(())
 }
