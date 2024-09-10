@@ -54,7 +54,7 @@ enum Commands {
         /// [scan-policy: index-limit] Stop generating addresses at this address.
         #[arg(long)]
         policy_end_index: Option<u32>,
-        /// Use this history sync mode, default is polling_http_api (polling_http_api | xpub_stream_ws | manual_stream_ws)
+        /// Use this history sync mode, default is polling_http_api [possible values: polling_http_api, xpub_stream_ws, manual_stream_ws]
         #[arg(long)]
         history_sync_mode: Option<String>,
         /// Start a multisig wallet
@@ -82,6 +82,7 @@ enum Commands {
 
     /// Wallet commands (requires a started wallet)
     Wallet {
+        /// Target wallet id
         #[arg(short, long, default_value = "default")]
         wallet_id: String,
 
@@ -177,9 +178,7 @@ enum WalletCommands {
     },
 
     /// Get derivation index of an address
-    AddressIndex {
-        address: String,
-    },
+    AddressIndex { address: String },
 
     /// Fetch all wallet addresses
     Addresses {},
@@ -214,9 +213,7 @@ enum WalletCommands {
     },
 
     /// Get number of blocks confirming this tx.
-    TxConfirmation {
-        id: String,
-    },
+    TxConfirmation { id: String },
 
     /// Send a simple transaction
     SimpleSend {
@@ -233,8 +230,7 @@ enum WalletCommands {
 
     /// Send a complex transaction
     Send {
-        /// { outputs: [{address, value, token?, type?, data?, timelock?}, inputs?: {type, index, hash}], change_address }
-        /// Json encoded
+        /// JSON encoded { outputs: [{address, value, token?, type?, data?, timelock?}, inputs?: {type, index, hash}], change_address }
         body: String,
     },
 
@@ -269,7 +265,7 @@ enum WalletCommands {
         /// If we should allow an address not from the wallet as `melt_authority_address`
         #[arg(long)]
         allow_external_melt_authority_address: Option<bool>,
-        /// List of data outputs to include in the transaction
+        /// List of data outputs to include in the transaction [use multiple times if needed `-d 123 -d 456`]
         #[arg(short, long)]
         data: Option<Vec<String>>,
     },
@@ -325,63 +321,92 @@ enum WalletCommands {
         data: Option<Vec<String>>,
     },
 
+    /// Find utxos on the wallet that match the filter
     UtxoFilter {
+        /// Max number of utxos to fetch.
         #[arg(long)]
         max_utxos: Option<u32>,
+        /// Filter by token UID.
         #[arg(long)]
         token: Option<String>,
+        /// Filter by address.
         #[arg(long)]
         filter_address: Option<String>,
+        /// Only utxos with amount smaller than this.
         #[arg(long)]
         amount_smaller_than: Option<u32>,
+        /// Only utxos with amount greater than this.
         #[arg(long)]
         amount_bigger_than: Option<u32>,
+        /// The sum of the amounts should not pass this value.
         #[arg(long)]
         maximum_amount: Option<u32>,
+        /// Filter by utxos that can be spent right now.
         #[arg(long)]
         only_available_utxos: Option<bool>,
     },
 
+    /// Send a transaction consolidating utxos that match the filter
     UtxoConsolidation {
+        /// Max number of utxos to fetch.
         #[arg(long)]
         max_utxos: Option<u32>,
+        /// Filter by token UID.
         #[arg(long)]
         token: Option<String>,
+        /// Filter by address.
         #[arg(long)]
         filter_address: Option<String>,
+        /// Only utxos with amount smaller than this.
         #[arg(long)]
         amount_smaller_than: Option<u32>,
+        /// Only utxos with amount greater than this.
         #[arg(long)]
         amount_bigger_than: Option<u32>,
+        /// The sum of the amounts should not pass this value.
         #[arg(long)]
         maximum_amount: Option<u32>,
     },
 
+    /// Send a transaction to create a new NFT
     CreateNft {
+        /// NFT name.
         name: String,
+        /// NFT symbol.
         symbol: String,
+        /// Amount to create.
         amount: u32,
+        /// NFT data.
         data: String,
+        /// Address to send created tokens (base58 encoded).
         #[arg(long)]
         address: Option<String>,
         #[arg(long)]
         change_address: Option<String>,
+        /// If a mint authority should be created (default: true)
         #[arg(long)]
         create_mint: Option<bool>,
+        /// Send the mint authority to this address (base58 encoded)
         #[arg(long)]
         mint_authority_address: Option<String>,
+        /// If we should allow an address not from the wallet as `mint_authority_address`
         #[arg(long)]
         allow_external_mint_authority_address: Option<bool>,
+        /// If a melt authority should be created (default: true)
         #[arg(long)]
         create_melt: Option<bool>,
+        /// Send the melt authority to this address (base58 encoded)
         #[arg(long)]
         melt_authority_address: Option<String>,
+        /// If we should allow an address not from the wallet as `melt_authority_address`
         #[arg(long)]
         allow_external_melt_authority_address: Option<bool>,
     },
 
+    /// Stop a wallet
     Stop {},
 
+    /// Commands for multisig wallets
     P2sh {
         #[command(subcommand)]
         command: P2shTxProposalCommands,
@@ -390,8 +415,9 @@ enum WalletCommands {
 
 #[derive(Subcommand)]
 enum P2shTxProposalCommands {
+    /// Build a tx proposal
     Build {
-        /// { outputs: [{ address, value, token? }], inputs?: [{tx_id, index}], change_address? }
+        /// JSON encoded: { outputs: [{ address, value, token? }], inputs?: [{tx_id, index}], change_address? }
         body: String,
     },
 
@@ -454,15 +480,16 @@ enum P2shTxProposalCommands {
     //     #[arg(short, long)]
     //     data: Option<Vec<String>>,
     // },
-    GetMySignatures {
-        tx_hex: String,
-    },
+    /// Get this wallet signatures for a tx proposal
+    GetMySignatures { tx_hex: String },
 
+    /// Build signatures and sign proposal
     Sign {
         tx_hex: String,
         signatures: Vec<String>,
     },
 
+    /// Build signatures, sign proposal and push transaction
     SignAndPush {
         tx_hex: String,
         signatures: Vec<String>,
