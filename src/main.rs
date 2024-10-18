@@ -19,10 +19,15 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 #[derive(Parser)]
 #[command(author = "r4mmer", version = VERSION, long_about = None)]
 struct Cli {
-    #[arg(long, default_value = "http://localhost:8000")]
+    #[arg(long, global = true, default_value = "http://localhost:8000")]
     host: String,
 
-    #[arg(long, default_value_t = false)]
+    #[arg(
+        long,
+        global = true,
+        default_value_t = false,
+        default_missing_value = "true"
+    )]
     debug: bool,
 
     #[command(subcommand)]
@@ -58,8 +63,8 @@ enum Commands {
         #[arg(long)]
         history_sync_mode: Option<String>,
         /// Start a multisig wallet
-        #[arg(long)]
-        multisig: Option<bool>,
+        #[arg(long, default_missing_value = "true")]
+        multisig: bool,
         /// Key of the multisig config (on `multisig` in the config)
         #[arg(long)]
         multisig_key: Option<String>,
@@ -83,7 +88,7 @@ enum Commands {
     /// Wallet commands (requires a started wallet)
     Wallet {
         /// Target wallet id
-        #[arg(short, long, default_value = "default")]
+        #[arg(short, long, global = true, default_value = "default")]
         wallet_id: String,
 
         #[command(subcommand)]
@@ -121,9 +126,9 @@ enum CustomCommands {
     Curl {
         #[arg(short, long, default_value = "default")]
         wallet_id: String,
-        #[arg(short, long, default_value_t = false)]
+        #[arg(short, long, default_value_t = false, default_missing_value = "true")]
         post: bool,
-        #[arg(short, long, default_value_t = false)]
+        #[arg(short, long, default_value_t = false, default_missing_value = "true")]
         data: bool,
         path: String,
     },
@@ -421,46 +426,46 @@ enum P2shTxProposalCommands {
         body: String,
     },
 
-    // CreateToken {
-    //     name: String,
-    //     symbol: String,
-    //     amount: u32,
-    //     #[arg(long)]
-    //     address: Option<String>,
-    //     #[arg(long)]
-    //     change_address: Option<String>,
-    //     #[arg(long)]
-    //     create_mint: Option<bool>,
-    //     #[arg(long)]
-    //     mint_authority_address: Option<String>,
-    //     #[arg(long)]
-    //     allow_external_mint_authority_address: Option<bool>,
-    //     #[arg(long)]
-    //     create_melt: Option<bool>,
-    //     #[arg(long)]
-    //     melt_authority_address: Option<String>,
-    //     #[arg(long)]
-    //     allow_external_melt_authority_address: Option<bool>,
-    //     #[arg(short, long)]
-    //     data: Option<Vec<String>>,
-    // },
-    //
-    // MintTokens {
-    //     token: String,
-    //     amount: u32,
-    //     #[arg(long)]
-    //     address: Option<String>,
-    //     #[arg(long)]
-    //     change_address: Option<String>,
-    //     #[arg(long)]
-    //     mint_authority_address: Option<String>,
-    //     #[arg(long)]
-    //     allow_external_mint_authority_address: Option<bool>,
-    //     #[arg(short, long)]
-    //     unshift_data: Option<bool>,
-    //     #[arg(short, long)]
-    //     data: Option<Vec<String>>,
-    // },
+    CreateToken {
+        name: String,
+        symbol: String,
+        amount: u32,
+        #[arg(long)]
+        address: Option<String>,
+        #[arg(long)]
+        change_address: Option<String>,
+        #[arg(long)]
+        create_mint: Option<bool>,
+        #[arg(long)]
+        mint_authority_address: Option<String>,
+        #[arg(long)]
+        allow_external_mint_authority_address: Option<bool>,
+        #[arg(long)]
+        create_melt: Option<bool>,
+        #[arg(long)]
+        melt_authority_address: Option<String>,
+        #[arg(long)]
+        allow_external_melt_authority_address: Option<bool>,
+        #[arg(short, long)]
+        mark_inputs_as_used: Option<bool>,
+    },
+
+    MintTokens {
+        token: String,
+        amount: u32,
+        #[arg(long)]
+        address: Option<String>,
+        #[arg(long)]
+        change_address: Option<String>,
+        #[arg(long)]
+        create_mint: Option<bool>,
+        #[arg(long)]
+        mint_authority_address: Option<String>,
+        #[arg(long)]
+        allow_external_mint_authority_address: Option<bool>,
+        #[arg(short, long)]
+        mark_inputs_as_used: Option<bool>,
+    },
     //
     // MeltTokens {
     //     token: String,
@@ -579,6 +584,64 @@ async fn handle_p2sh_txproposal(
                 body: body.to_string(),
             };
             handle_p2sh_txproposal_build(params).await?;
+        }
+
+        P2shTxProposalCommands::CreateToken {
+            name,
+            symbol,
+            amount,
+            address,
+            change_address,
+            create_mint,
+            mint_authority_address,
+            allow_external_mint_authority_address,
+            create_melt,
+            melt_authority_address,
+            allow_external_melt_authority_address,
+            mark_inputs_as_used,
+        } => {
+            let params = ParamsWalletP2shTxProposalCreateToken {
+                config,
+                wallet_id,
+                name: name.to_string(),
+                symbol: symbol.to_string(),
+                amount: *amount,
+                address: address.clone(),
+                change_address: change_address.clone(),
+                create_mint: *create_mint,
+                mint_authority_address: mint_authority_address.clone(),
+                allow_external_mint_authority_address: *allow_external_mint_authority_address,
+                create_melt: *create_melt,
+                melt_authority_address: melt_authority_address.clone(),
+                allow_external_melt_authority_address: *allow_external_melt_authority_address,
+                mark_inputs_as_used: *mark_inputs_as_used,
+            };
+            handle_p2sh_txproposal_create_token(params).await?;
+        }
+
+        P2shTxProposalCommands::MintTokens {
+            token,
+            amount,
+            address,
+            change_address,
+            create_mint,
+            mint_authority_address,
+            allow_external_mint_authority_address,
+            mark_inputs_as_used,
+        } => {
+            let params = ParamsWalletP2shTxProposalMintTokens {
+                config,
+                wallet_id,
+                token: token.to_string(),
+                amount: *amount,
+                address: address.clone(),
+                change_address: change_address.clone(),
+                create_mint: *create_mint,
+                mint_authority_address: mint_authority_address.clone(),
+                allow_external_mint_authority_address: *allow_external_mint_authority_address,
+                mark_inputs_as_used: *mark_inputs_as_used,
+            };
+            handle_p2sh_txproposal_mint_tokens(params).await?;
         }
 
         P2shTxProposalCommands::GetMySignatures { tx_hex } => {

@@ -45,8 +45,8 @@ pub async fn handle_start(params: ParamsStart) -> Result<(), Box<dyn std::error:
         map.insert("history_sync_mode", HashMapValue::String(history_sync_mode));
     }
 
-    if let Some(multisig) = params.multisig {
-        map.insert("multisig", HashMapValue::Bool(multisig));
+    if params.multisig {
+        map.insert("multisig", HashMapValue::Bool(true));
 
         if let Some(multisig_key) = params.multisig_key {
             map.insert("multisigKey", HashMapValue::String(multisig_key));
@@ -1089,6 +1089,152 @@ pub async fn handle_p2sh_txproposal_sign_and_push(
                 .collect(),
         ),
     );
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .header("X-Wallet-Id", params.wallet_id)
+        .json(&map)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
+    Ok(())
+}
+
+/// Create a custom token in the given P2SH wallet.
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
+pub async fn handle_p2sh_txproposal_create_token(
+    params: ParamsWalletP2shTxProposalCreateToken,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(&params.config.host, "/wallet/p2sh/tx-proposal/create-token")?;
+
+    let mut map: HashMap<&str, HashMapValue> = HashMap::new();
+    map.insert("name", HashMapValue::String(params.name));
+    map.insert("symbol", HashMapValue::String(params.symbol));
+    map.insert("amount", HashMapValue::Int(params.amount));
+
+    if let Some(address) = params.address {
+        map.insert("address", HashMapValue::String(address));
+    }
+
+    if let Some(change_address) = params.change_address {
+        map.insert("change_address", HashMapValue::String(change_address));
+    }
+
+    if let Some(create_mint) = params.create_mint {
+        map.insert("create_mint", HashMapValue::Bool(create_mint));
+    }
+
+    if let Some(mint_authority_address) = params.mint_authority_address {
+        map.insert(
+            "mint_authority_address",
+            HashMapValue::String(mint_authority_address),
+        );
+    }
+
+    if let Some(allow_external_mint_authority_address) =
+        params.allow_external_mint_authority_address
+    {
+        map.insert(
+            "allow_external_mint_authority_address",
+            HashMapValue::Bool(allow_external_mint_authority_address),
+        );
+    }
+
+    if let Some(create_melt) = params.create_melt {
+        map.insert("create_melt", HashMapValue::Bool(create_melt));
+    }
+
+    if let Some(melt_authority_address) = params.melt_authority_address {
+        map.insert(
+            "melt_authority_address",
+            HashMapValue::String(melt_authority_address),
+        );
+    }
+
+    if let Some(allow_external_melt_authority_address) =
+        params.allow_external_melt_authority_address
+    {
+        map.insert(
+            "allow_external_melt_authority_address",
+            HashMapValue::Bool(allow_external_melt_authority_address),
+        );
+    }
+
+    if let Some(mark_inputs_as_used) = params.mark_inputs_as_used {
+        map.insert(
+            "mark_inputs_as_used",
+            HashMapValue::Bool(mark_inputs_as_used),
+        );
+    }
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .header("X-Wallet-Id", params.wallet_id)
+        .json(&map)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
+    Ok(())
+}
+
+///
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
+pub async fn handle_p2sh_txproposal_mint_tokens(
+    params: ParamsWalletP2shTxProposalMintTokens,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(&params.config.host, "/wallet/p2sh/tx-proposal/mint-tokens")?;
+
+    let mut map: HashMap<&str, HashMapValue> = HashMap::new();
+    map.insert("token", HashMapValue::String(params.token));
+    map.insert("amount", HashMapValue::Int(params.amount));
+
+    if let Some(address) = params.address {
+        map.insert("address", HashMapValue::String(address));
+    }
+
+    if let Some(change_address) = params.change_address {
+        map.insert("change_address", HashMapValue::String(change_address));
+    }
+
+    if let Some(create_mint) = params.create_mint {
+        map.insert("create_mint", HashMapValue::Bool(create_mint));
+    }
+
+    if let Some(mint_authority_address) = params.mint_authority_address {
+        map.insert(
+            "mint_authority_address",
+            HashMapValue::String(mint_authority_address),
+        );
+    }
+
+    if let Some(allow_external_mint_authority_address) =
+        params.allow_external_mint_authority_address
+    {
+        map.insert(
+            "allow_external_mint_authority_address",
+            HashMapValue::Bool(allow_external_mint_authority_address),
+        );
+    }
+
+    if let Some(mark_inputs_as_used) = params.mark_inputs_as_used {
+        map.insert(
+            "mark_inputs_as_used",
+            HashMapValue::Bool(mark_inputs_as_used),
+        );
+    }
 
     let text_response = build_client(&params.config)?
         .post(url)

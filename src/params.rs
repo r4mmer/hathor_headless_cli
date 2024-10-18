@@ -30,7 +30,7 @@ pub struct ParamsStart {
     /// History sync mode
     pub history_sync_mode: Option<String>,
     /// Multisig, if we want to start a multisig wallet
-    pub multisig: Option<bool>,
+    pub multisig: bool,
     /// Multisig key, use this key on the multisig config instead of the seed-key
     pub multisig_key: Option<String>,
     // xpubkey, seed, precalculatedAddresses?
@@ -380,4 +380,60 @@ pub struct ParamsP2shTxProposalSign {
     pub wallet_id: String,
     pub tx_hex: String,
     pub signatures: Vec<String>,
+}
+
+/// Arguments for the wallet create token command
+pub struct ParamsWalletP2shTxProposalCreateToken {
+    /// Common config
+    pub config: CliConfig,
+    /// wallet-id used to indentify the wallet
+    pub wallet_id: String,
+    /// Name of the token to create
+    pub name: String,
+    /// Symbol of the token to create
+    pub symbol: String,
+    /// amount of tokens to create
+    pub amount: u32,
+    /// Optionally specify the destination address
+    pub address: Option<String>,
+    /// Optionally specify the change address
+    pub change_address: Option<String>,
+    /// Create mint authority for the wallet, headless defaults to true
+    pub create_mint: Option<bool>,
+    /// Optionally send the mint authority to this address
+    pub mint_authority_address: Option<String>,
+    /// Flag to allow sending the mint authority to an address not from the wallet
+    pub allow_external_mint_authority_address: Option<bool>,
+    /// Create melt authority for the wallet, headless defaults to true
+    pub create_melt: Option<bool>,
+    /// Optionally send the melt authority to this address
+    pub melt_authority_address: Option<String>,
+    /// Flag to allow sending the melt authority to an address not from the wallet
+    pub allow_external_melt_authority_address: Option<bool>,
+    /// Flag to mark inputs as used
+    pub mark_inputs_as_used: Option<bool>,
+}
+
+/// Arguments for the wallet P2SH mint tokens command
+pub struct ParamsWalletP2shTxProposalMintTokens {
+    /// Common config
+    pub config: CliConfig,
+    /// wallet-id used to indentify the wallet
+    pub wallet_id: String,
+    /// Uid of the token
+    pub token: String,
+    /// amount of tokens to mint
+    pub amount: u32,
+    /// Optionally specify the destination address
+    pub address: Option<String>,
+    /// Optionally specify the change address
+    pub change_address: Option<String>,
+    /// Create mint authority for the wallet, headless defaults to true
+    pub create_mint: Option<bool>,
+    /// Optionally send the mint authority to this address
+    pub mint_authority_address: Option<String>,
+    /// Flag to allow sending the mint authority to an address not from the wallet
+    pub allow_external_mint_authority_address: Option<bool>,
+    /// Flag to mark inputs as used
+    pub mark_inputs_as_used: Option<bool>,
 }
