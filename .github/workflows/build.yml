@@ -49,4 +49,4 @@ jobs:
           TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
         run: |
           echo "Creating release"
-          gh release create $TAG "linux_headless_cli#Linux" "windows_headless_cli#Windows" "macos_headless_cli#MacOS"
+          gh release create $TAG "linux_headless_cli#Linux" "windows_headless_cli#Windows" "mac_headless_cli#MacOS"
