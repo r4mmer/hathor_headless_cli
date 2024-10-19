@@ -1,6 +1,7 @@
 name: Build binaries
 on:
   push:
+    branches: [ "master" ]
     tags: [ v* ]
 
 jobs:
@@ -47,7 +48,9 @@ jobs:
       - uses: actions/download-artifact@v4
       - name: Release
         env:
-          TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          TAG: ${{ github.ref_type == 'tag' && github.ref_name || 'v0.0.7' }}
         run: |
           echo "Creating release"
-          gh release create $TAG "linux_headless_cli#Linux" "windows_headless_cli#Windows"
+          ls -lah
+          ls -lah linux_headless_cli
+          gh release create $TAG "linux_headless_cli/linux_headless_cli#Linux" "windows_headless_cli/windows_headless_cli#Windows" "mac_headless_cli/mac_headless_cli#MacOS"
