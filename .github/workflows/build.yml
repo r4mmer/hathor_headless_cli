@@ -4,8 +4,8 @@ on:
     tags: [ v* ]
 
 jobs:
-  release:
-    name: Release - ${{ matrix.platform.release_for }}
+  build:
+    name: Build - ${{ matrix.platform.release_for }}
     strategy:
       matrix:
         platform:
@@ -29,11 +29,21 @@ jobs:
 
     runs-on: ${{ matrix.platform.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release --all-features
       - name: Archive binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.name }}
           path: ${{ matrix.platform.bin }}
+  release:
+    needs: build
+    steps:
+      - uses: actions/download-artifact@v4
+      - name: Release
+        env:
+          TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: |
+          echo "Creating release"
+          gh release create $TAG "linux_headless_cli#Linux" "windows_headless_cli#Windows" "macos_headless_cli#MacOS"
