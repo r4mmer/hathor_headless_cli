@@ -51,6 +51,5 @@ jobs:
           TAG: ${{ github.ref_type == 'tag' && github.ref_name || 'v0.0.7' }}
         run: |
           echo "Creating release"
-          ls -lah
-          ls -lah linux_headless_cli
-          gh release create $TAG "linux_headless_cli/linux_headless_cli#Linux" "windows_headless_cli/windows_headless_cli#Windows" "mac_headless_cli/mac_headless_cli#MacOS"
+          ls -lah windows_headless_cli
+          gh release create $TAG "linux_headless_cli/headless_cli#Linux" "windows_headless_cli/headless_cli.exe#Windows" "mac_headless_cli/headless_cli#MacOS"
