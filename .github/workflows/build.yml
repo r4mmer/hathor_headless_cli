@@ -39,6 +39,7 @@ jobs:
           path: ${{ matrix.platform.bin }}
   release:
     needs: build
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
       - name: Release
