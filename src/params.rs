@@ -447,3 +447,29 @@ pub struct ParamsWalletP2shTxProposalMintTokens {
     /// Flag to mark inputs as used
     pub mark_inputs_as_used: Option<bool>,
 }
+
+/// Arguments for the wallet P2SH Melt tokens command
+pub struct ParamsWalletP2shTxProposalMeltTokens {
+    /// Common config
+    pub config: CliConfig,
+    /// wallet-id used to indentify the wallet
+    pub wallet_id: String,
+    /// Uid of the token
+    pub token: String,
+    /// amount of tokens to melt
+    pub amount: u32,
+    /// Optionally specify the destination address
+    pub address: Option<String>,
+    /// Optionally specify the change address
+    pub change_address: Option<String>,
+    /// Optionally specify the deposit address
+    pub deposit_address: Option<String>,
+    /// Create melt authority for the wallet, headless defaults to true
+    pub create_melt: Option<bool>,
+    /// Optionally send the melt authority to this address
+    pub melt_authority_address: Option<String>,
+    /// Flag to allow sending the melt authority to an address not from the wallet
+    pub allow_external_melt_authority_address: Option<bool>,
+    /// Flag to mark inputs as used
+    pub mark_inputs_as_used: Option<bool>,
+}

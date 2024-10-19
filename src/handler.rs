@@ -1254,3 +1254,68 @@ pub async fn handle_p2sh_txproposal_mint_tokens(
     println!("{}", text_response);
     Ok(())
 }
+
+/// # Arguments
+///
+/// * `params` - arguments to configure the call being made
+///
+pub async fn handle_p2sh_txproposal_melt_tokens(
+    params: ParamsWalletP2shTxProposalMeltTokens,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(&params.config.host, "/wallet/p2sh/tx-proposal/melt-tokens")?;
+
+    let mut map: HashMap<&str, HashMapValue> = HashMap::new();
+    map.insert("token", HashMapValue::String(params.token));
+    map.insert("amount", HashMapValue::Int(params.amount));
+
+    if let Some(address) = params.address {
+        map.insert("address", HashMapValue::String(address));
+    }
+
+    if let Some(deposit_address) = params.deposit_address {
+        map.insert("deposit_address", HashMapValue::String(deposit_address));
+    }
+
+    if let Some(change_address) = params.change_address {
+        map.insert("change_address", HashMapValue::String(change_address));
+    }
+
+    if let Some(create_melt) = params.create_melt {
+        map.insert("create_melt", HashMapValue::Bool(create_melt));
+    }
+
+    if let Some(melt_authority_address) = params.melt_authority_address {
+        map.insert(
+            "melt_authority_address",
+            HashMapValue::String(melt_authority_address),
+        );
+    }
+
+    if let Some(allow_external_melt_authority_address) =
+        params.allow_external_melt_authority_address
+    {
+        map.insert(
+            "allow_external_melt_authority_address",
+            HashMapValue::Bool(allow_external_melt_authority_address),
+        );
+    }
+
+    if let Some(mark_inputs_as_used) = params.mark_inputs_as_used {
+        map.insert(
+            "mark_inputs_as_used",
+            HashMapValue::Bool(mark_inputs_as_used),
+        );
+    }
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .header("X-Wallet-Id", params.wallet_id)
+        .json(&map)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
+    Ok(())
+}

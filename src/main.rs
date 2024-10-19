@@ -480,25 +480,25 @@ enum P2shTxProposalCommands {
         #[arg(short, long)]
         mark_inputs_as_used: Option<bool>,
     },
-    //
-    // MeltTokens {
-    //     token: String,
-    //     amount: u32,
-    //     #[arg(long)]
-    //     address: Option<String>,
-    //     #[arg(long)]
-    //     deposit_address: Option<String>,
-    //     #[arg(long)]
-    //     change_address: Option<String>,
-    //     #[arg(long)]
-    //     melt_authority_address: Option<String>,
-    //     #[arg(long)]
-    //     allow_external_melt_authority_address: Option<bool>,
-    //     #[arg(short, long)]
-    //     unshift_data: Option<bool>,
-    //     #[arg(short, long)]
-    //     data: Option<Vec<String>>,
-    // },
+
+    MeltTokens {
+        token: String,
+        amount: u32,
+        #[arg(long)]
+        address: Option<String>,
+        #[arg(long)]
+        deposit_address: Option<String>,
+        #[arg(long)]
+        change_address: Option<String>,
+        #[arg(long)]
+        create_melt: Option<bool>,
+        #[arg(long)]
+        melt_authority_address: Option<String>,
+        #[arg(long)]
+        allow_external_melt_authority_address: Option<bool>,
+        #[arg(short, long)]
+        mark_inputs_as_used: Option<bool>,
+    },
     /// Get this wallet signatures for a tx proposal
     GetMySignatures { tx_hex: String },
 
@@ -676,6 +676,33 @@ async fn handle_p2sh_txproposal(
                 mark_inputs_as_used: *mark_inputs_as_used,
             };
             handle_p2sh_txproposal_mint_tokens(params).await?;
+        }
+
+        P2shTxProposalCommands::MeltTokens {
+            token,
+            amount,
+            address,
+            deposit_address,
+            change_address,
+            create_melt,
+            melt_authority_address,
+            allow_external_melt_authority_address,
+            mark_inputs_as_used,
+        } => {
+            let params = ParamsWalletP2shTxProposalMeltTokens {
+                config,
+                wallet_id,
+                token: token.to_string(),
+                amount: *amount,
+                address: address.clone(),
+                deposit_address: deposit_address.clone(),
+                change_address: change_address.clone(),
+                create_melt: *create_melt,
+                melt_authority_address: melt_authority_address.clone(),
+                allow_external_melt_authority_address: *allow_external_melt_authority_address,
+                mark_inputs_as_used: *mark_inputs_as_used,
+            };
+            handle_p2sh_txproposal_melt_tokens(params).await?;
         }
 
         P2shTxProposalCommands::GetMySignatures { tx_hex } => {
