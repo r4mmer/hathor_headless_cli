@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::time::Duration;
 
 use reqwest::{self, Url};
@@ -46,4 +47,32 @@ pub enum HashMapValue {
     String(String),
     Bool(bool),
     List(Vec<HashMapValue>),
+    Dict(HashMap<String, HashMapValue>),
+}
+
+impl From<String> for HashMapValue {
+    fn from(s: String) -> Self {
+        HashMapValue::String(s)
+    }
+}
+impl From<u32> for HashMapValue {
+    fn from(i: u32) -> Self {
+        HashMapValue::Int(i)
+    }
+}
+impl From<bool> for HashMapValue {
+    fn from(x: bool) -> Self {
+        HashMapValue::Bool(x)
+    }
+}
+
+impl From<Vec<HashMapValue>> for HashMapValue {
+    fn from(v: Vec<HashMapValue>) -> Self {
+        HashMapValue::List(v)
+    }
+}
+impl From<HashMap<String, HashMapValue>> for HashMapValue {
+    fn from(d: HashMap<String, HashMapValue>) -> Self {
+        HashMapValue::Dict(d)
+    }
 }

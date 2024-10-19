@@ -370,6 +370,16 @@ pub struct ParamsP2shTxProposalBuild {
     pub body: String,
 }
 
+pub struct ParamsP2shTxProposalBuildSimpleSendTokens {
+    pub config: CliConfig,
+    pub wallet_id: String,
+    pub address: String,
+    pub value: u32,
+    pub token: Option<String>,
+    pub change_address: Option<String>,
+    pub mark_inputs_as_used: Option<bool>,
+}
+
 pub struct ParamsP2shTxProposalGetMySignatures {
     pub config: CliConfig,
     pub wallet_id: String,

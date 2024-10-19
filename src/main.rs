@@ -422,8 +422,22 @@ enum WalletCommands {
 enum P2shTxProposalCommands {
     /// Build a tx proposal
     Build {
-        /// JSON encoded: { outputs: [{ address, value, token? }], inputs?: [{tx_id, index}], change_address? }
+        /// JSON encoded: { outputs: [{ address, value, token? }], inputs?: [{tx_id, index}], change_address?, mark_inputs_as_used}
         body: String,
+    },
+
+    SimpleSendTokens {
+        /// Destination address (base58 encoded)
+        address: String,
+        /// Amount of tokens to send
+        value: u32,
+        /// Token UID (hex encoded)
+        #[arg(short, long)]
+        token: Option<String>,
+        #[arg(short, long)]
+        change_address: Option<String>,
+        #[arg(short, long)]
+        mark_inputs_as_used: Option<bool>,
     },
 
     CreateToken {
@@ -584,6 +598,26 @@ async fn handle_p2sh_txproposal(
                 body: body.to_string(),
             };
             handle_p2sh_txproposal_build(params).await?;
+        }
+
+        P2shTxProposalCommands::SimpleSendTokens {
+            address,
+            value,
+            token,
+            change_address,
+            mark_inputs_as_used,
+        } => {
+            let params = ParamsP2shTxProposalBuildSimpleSendTokens {
+                config,
+                wallet_id,
+                address: address.clone(),
+                value: *value,
+                token: token.clone(),
+                change_address: change_address.clone(),
+                mark_inputs_as_used: *mark_inputs_as_used,
+            };
+
+            handle_p2sh_txproposal_build_simple_send_tokens(params).await?;
         }
 
         P2shTxProposalCommands::CreateToken {

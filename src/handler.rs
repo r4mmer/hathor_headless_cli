@@ -18,38 +18,38 @@ use serde_json::json;
 ///
 pub async fn handle_start(params: ParamsStart) -> Result<(), Box<dyn std::error::Error>> {
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
-    map.insert("seedKey", HashMapValue::String(params.seed_key));
-    map.insert("wallet-id", HashMapValue::String(params.wallet_id));
+    map.insert("seedKey", params.seed_key.into());
+    map.insert("wallet-id", params.wallet_id.into());
 
     if let Some(passphrase) = params.passphrase {
-        map.insert("passphrase", HashMapValue::String(passphrase));
+        map.insert("passphrase", passphrase.into());
     }
 
     if let Some(scan_policy) = params.scan_policy {
-        map.insert("scanPolicy", HashMapValue::String(scan_policy));
+        map.insert("scanPolicy", scan_policy.into());
     }
 
     if let Some(gap_limit) = params.gap_limit {
-        map.insert("gapLimit", HashMapValue::Int(gap_limit));
+        map.insert("gapLimit", gap_limit.into());
     }
 
     if let Some(policy_start_index) = params.policy_start_index {
-        map.insert("policyStartIndex", HashMapValue::Int(policy_start_index));
+        map.insert("policyStartIndex", policy_start_index.into());
     }
 
     if let Some(policy_end_index) = params.policy_end_index {
-        map.insert("policyEndIndex", HashMapValue::Int(policy_end_index));
+        map.insert("policyEndIndex", policy_end_index.into());
     }
 
     if let Some(history_sync_mode) = params.history_sync_mode {
-        map.insert("history_sync_mode", HashMapValue::String(history_sync_mode));
+        map.insert("history_sync_mode", history_sync_mode.into());
     }
 
     if params.multisig {
-        map.insert("multisig", HashMapValue::Bool(true));
+        map.insert("multisig", true.into());
 
         if let Some(multisig_key) = params.multisig_key {
-            map.insert("multisigKey", HashMapValue::String(multisig_key));
+            map.insert("multisigKey", multisig_key.into());
         }
     }
 
@@ -437,15 +437,15 @@ pub async fn handle_simple_send(
     let url = build_headless_url(&params.config.host, "/wallet/simple-send-tx")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
-    map.insert("address", HashMapValue::String(params.address));
-    map.insert("value", HashMapValue::Int(params.value));
+    map.insert("address", params.address.into());
+    map.insert("value", params.value.into());
 
     if let Some(change_address) = params.change_address {
-        map.insert("change_address", HashMapValue::String(change_address));
+        map.insert("change_address", change_address.into());
     }
 
     if let Some(token) = params.token {
-        map.insert("token", HashMapValue::String(token));
+        map.insert("token", token.into());
     }
 
     let text_response = build_client(&params.config)?
@@ -496,27 +496,24 @@ pub async fn handle_create_token(
     let url = build_headless_url(&params.config.host, "/wallet/create-token")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
-    map.insert("name", HashMapValue::String(params.name));
-    map.insert("symbol", HashMapValue::String(params.symbol));
-    map.insert("amount", HashMapValue::Int(params.amount));
+    map.insert("name", params.name.into());
+    map.insert("symbol", params.symbol.into());
+    map.insert("amount", params.amount.into());
 
     if let Some(address) = params.address {
-        map.insert("address", HashMapValue::String(address));
+        map.insert("address", address.into());
     }
 
     if let Some(change_address) = params.change_address {
-        map.insert("change_address", HashMapValue::String(change_address));
+        map.insert("change_address", change_address.into());
     }
 
     if let Some(create_mint) = params.create_mint {
-        map.insert("create_mint", HashMapValue::Bool(create_mint));
+        map.insert("create_mint", create_mint.into());
     }
 
     if let Some(mint_authority_address) = params.mint_authority_address {
-        map.insert(
-            "mint_authority_address",
-            HashMapValue::String(mint_authority_address),
-        );
+        map.insert("mint_authority_address", mint_authority_address.into());
     }
 
     if let Some(allow_external_mint_authority_address) =
@@ -524,19 +521,16 @@ pub async fn handle_create_token(
     {
         map.insert(
             "allow_external_mint_authority_address",
-            HashMapValue::Bool(allow_external_mint_authority_address),
+            allow_external_mint_authority_address.into(),
         );
     }
 
     if let Some(create_melt) = params.create_melt {
-        map.insert("create_melt", HashMapValue::Bool(create_melt));
+        map.insert("create_melt", create_melt.into());
     }
 
     if let Some(melt_authority_address) = params.melt_authority_address {
-        map.insert(
-            "melt_authority_address",
-            HashMapValue::String(melt_authority_address),
-        );
+        map.insert("melt_authority_address", melt_authority_address.into());
     }
 
     if let Some(allow_external_melt_authority_address) =
@@ -544,18 +538,17 @@ pub async fn handle_create_token(
     {
         map.insert(
             "allow_external_melt_authority_address",
-            HashMapValue::Bool(allow_external_melt_authority_address),
+            allow_external_melt_authority_address.into(),
         );
     }
 
     if let Some(data) = params.data {
         map.insert(
             "data",
-            HashMapValue::List(
-                data.iter()
-                    .map(|s| HashMapValue::String(s.clone()))
-                    .collect(),
-            ),
+            data.iter()
+                .map(|s| s.clone().into())
+                .collect::<Vec<HashMapValue>>()
+                .into(),
         );
     }
 
@@ -584,22 +577,19 @@ pub async fn handle_mint_tokens(
     let url = build_headless_url(&params.config.host, "/wallet/mint-tokens")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
-    map.insert("token", HashMapValue::String(params.token));
-    map.insert("amount", HashMapValue::Int(params.amount));
+    map.insert("token", params.token.into());
+    map.insert("amount", params.amount.into());
 
     if let Some(address) = params.address {
-        map.insert("address", HashMapValue::String(address));
+        map.insert("address", address.into());
     }
 
     if let Some(change_address) = params.change_address {
-        map.insert("change_address", HashMapValue::String(change_address));
+        map.insert("change_address", change_address.into());
     }
 
     if let Some(mint_authority_address) = params.mint_authority_address {
-        map.insert(
-            "mint_authority_address",
-            HashMapValue::String(mint_authority_address),
-        );
+        map.insert("mint_authority_address", mint_authority_address.into());
     }
 
     if let Some(allow_external_mint_authority_address) =
@@ -607,22 +597,21 @@ pub async fn handle_mint_tokens(
     {
         map.insert(
             "allow_external_mint_authority_address",
-            HashMapValue::Bool(allow_external_mint_authority_address),
+            allow_external_mint_authority_address.into(),
         );
     }
 
     if let Some(unshift_data) = params.unshift_data {
-        map.insert("unshift_data", HashMapValue::Bool(unshift_data));
+        map.insert("unshift_data", unshift_data.into());
     }
 
     if let Some(data) = params.data {
         map.insert(
             "data",
-            HashMapValue::List(
-                data.iter()
-                    .map(|s| HashMapValue::String(s.clone()))
-                    .collect(),
-            ),
+            data.iter()
+                .map(|s| s.clone().into())
+                .collect::<Vec<HashMapValue>>()
+                .into(),
         );
     }
 
@@ -651,22 +640,19 @@ pub async fn handle_melt_tokens(
     let url = build_headless_url(&params.config.host, "/wallet/melt-tokens")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
-    map.insert("token", HashMapValue::String(params.token));
-    map.insert("amount", HashMapValue::Int(params.amount));
+    map.insert("token", params.token.into());
+    map.insert("amount", params.amount.into());
 
     if let Some(address) = params.address {
-        map.insert("address", HashMapValue::String(address));
+        map.insert("address", address.into());
     }
 
     if let Some(change_address) = params.change_address {
-        map.insert("change_address", HashMapValue::String(change_address));
+        map.insert("change_address", change_address.into());
     }
 
     if let Some(melt_authority_address) = params.melt_authority_address {
-        map.insert(
-            "melt_authority_address",
-            HashMapValue::String(melt_authority_address),
-        );
+        map.insert("melt_authority_address", melt_authority_address.into());
     }
 
     if let Some(allow_external_melt_authority_address) =
@@ -674,22 +660,21 @@ pub async fn handle_melt_tokens(
     {
         map.insert(
             "allow_external_melt_authority_address",
-            HashMapValue::Bool(allow_external_melt_authority_address),
+            allow_external_melt_authority_address.into(),
         );
     }
 
     if let Some(unshift_data) = params.unshift_data {
-        map.insert("unshiftData", HashMapValue::Bool(unshift_data));
+        map.insert("unshiftData", unshift_data.into());
     }
 
     if let Some(data) = params.data {
         map.insert(
             "data",
-            HashMapValue::List(
-                data.iter()
-                    .map(|s| HashMapValue::String(s.clone()))
-                    .collect(),
-            ),
+            data.iter()
+                .map(|s| s.clone().into())
+                .collect::<Vec<HashMapValue>>()
+                .into(),
         );
     }
 
@@ -720,37 +705,31 @@ pub async fn handle_utxo_filter(
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
 
     if let Some(max_utxos) = params.max_utxos {
-        map.insert("max_utxos", HashMapValue::Int(max_utxos));
+        map.insert("max_utxos", max_utxos.into());
     }
 
     if let Some(token) = params.token {
-        map.insert("token", HashMapValue::String(token));
+        map.insert("token", token.into());
     }
 
     if let Some(filter_address) = params.filter_address {
-        map.insert("filter_address", HashMapValue::String(filter_address));
+        map.insert("filter_address", filter_address.into());
     }
 
     if let Some(amount_smaller_than) = params.amount_smaller_than {
-        map.insert(
-            "amount_smaller_than",
-            HashMapValue::Int(amount_smaller_than),
-        );
+        map.insert("amount_smaller_than", amount_smaller_than.into());
     }
 
     if let Some(amount_bigger_than) = params.amount_bigger_than {
-        map.insert("amount_bigger_than", HashMapValue::Int(amount_bigger_than));
+        map.insert("amount_bigger_than", amount_bigger_than.into());
     }
 
     if let Some(maximum_amount) = params.maximum_amount {
-        map.insert("maximum_amount", HashMapValue::Int(maximum_amount));
+        map.insert("maximum_amount", maximum_amount.into());
     }
 
     if let Some(only_available_utxos) = params.only_available_utxos {
-        map.insert(
-            "only_available_utxos",
-            HashMapValue::Bool(only_available_utxos),
-        );
+        map.insert("only_available_utxos", only_available_utxos.into());
     }
 
     let text_response = build_client(&params.config)?
@@ -780,30 +759,27 @@ pub async fn handle_utxo_consolidation(
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
 
     if let Some(max_utxos) = params.max_utxos {
-        map.insert("max_utxos", HashMapValue::Int(max_utxos));
+        map.insert("max_utxos", max_utxos.into());
     }
 
     if let Some(token) = params.token {
-        map.insert("token", HashMapValue::String(token));
+        map.insert("token", token.into());
     }
 
     if let Some(filter_address) = params.filter_address {
-        map.insert("filter_address", HashMapValue::String(filter_address));
+        map.insert("filter_address", filter_address.into());
     }
 
     if let Some(amount_smaller_than) = params.amount_smaller_than {
-        map.insert(
-            "amount_smaller_than",
-            HashMapValue::Int(amount_smaller_than),
-        );
+        map.insert("amount_smaller_than", amount_smaller_than.into());
     }
 
     if let Some(amount_bigger_than) = params.amount_bigger_than {
-        map.insert("amount_bigger_than", HashMapValue::Int(amount_bigger_than));
+        map.insert("amount_bigger_than", amount_bigger_than.into());
     }
 
     if let Some(maximum_amount) = params.maximum_amount {
-        map.insert("maximum_amount", HashMapValue::Int(maximum_amount));
+        map.insert("maximum_amount", maximum_amount.into());
     }
 
     let text_response = build_client(&params.config)?
@@ -831,28 +807,25 @@ pub async fn handle_create_nft(
     let url = build_headless_url(&params.config.host, "/wallet/create-nft")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
-    map.insert("name", HashMapValue::String(params.name));
-    map.insert("symbol", HashMapValue::String(params.symbol));
-    map.insert("data", HashMapValue::String(params.data));
-    map.insert("amount", HashMapValue::Int(params.amount));
+    map.insert("name", params.name.into());
+    map.insert("symbol", params.symbol.into());
+    map.insert("data", params.data.into());
+    map.insert("amount", params.amount.into());
 
     if let Some(address) = params.address {
-        map.insert("address", HashMapValue::String(address));
+        map.insert("address", address.into());
     }
 
     if let Some(change_address) = params.change_address {
-        map.insert("change_address", HashMapValue::String(change_address));
+        map.insert("change_address", change_address.into());
     }
 
     if let Some(create_mint) = params.create_mint {
-        map.insert("create_mint", HashMapValue::Bool(create_mint));
+        map.insert("create_mint", create_mint.into());
     }
 
     if let Some(mint_authority_address) = params.mint_authority_address {
-        map.insert(
-            "mint_authority_address",
-            HashMapValue::String(mint_authority_address),
-        );
+        map.insert("mint_authority_address", mint_authority_address.into());
     }
 
     if let Some(allow_external_mint_authority_address) =
@@ -860,19 +833,16 @@ pub async fn handle_create_nft(
     {
         map.insert(
             "allow_external_mint_authority_address",
-            HashMapValue::Bool(allow_external_mint_authority_address),
+            allow_external_mint_authority_address.into(),
         );
     }
 
     if let Some(create_melt) = params.create_melt {
-        map.insert("create_melt", HashMapValue::Bool(create_melt));
+        map.insert("create_melt", create_melt.into());
     }
 
     if let Some(melt_authority_address) = params.melt_authority_address {
-        map.insert(
-            "melt_authority_address",
-            HashMapValue::String(melt_authority_address),
-        );
+        map.insert("melt_authority_address", melt_authority_address.into());
     }
 
     if let Some(allow_external_melt_authority_address) =
@@ -880,7 +850,7 @@ pub async fn handle_create_nft(
     {
         map.insert(
             "allow_external_melt_authority_address",
-            HashMapValue::Bool(allow_external_melt_authority_address),
+            allow_external_melt_authority_address.into(),
         );
     }
 
@@ -1014,6 +984,42 @@ pub async fn handle_p2sh_txproposal_build(
     Ok(())
 }
 
+pub async fn handle_p2sh_txproposal_build_simple_send_tokens(
+    params: ParamsP2shTxProposalBuildSimpleSendTokens,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let url = build_headless_url(&params.config.host, "/wallet/p2sh/tx-proposal")?;
+
+    let mut output = HashMap::<String, HashMapValue>::new();
+    output.insert(String::from("address"), params.address.into());
+    output.insert(String::from("value"), params.value.into());
+    if let Some(token) = params.token {
+        output.insert(String::from("token"), token.into());
+    }
+    let outputs = vec![HashMapValue::Dict(output)];
+    let mut map: HashMap<&str, HashMapValue> = HashMap::new();
+    map.insert("outputs", outputs.into());
+
+    if let Some(change_address) = params.change_address {
+        map.insert("change_address", change_address.into());
+    }
+    if let Some(mark_inputs_as_used) = params.mark_inputs_as_used {
+        map.insert("mark_inputs_as_used", mark_inputs_as_used.into());
+    }
+
+    let text_response = build_client(&params.config)?
+        .post(url)
+        .header("X-Wallet-Id", params.wallet_id)
+        .header("Content-Type", "application/json")
+        .json(&map)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", text_response);
+    Ok(())
+}
+
 pub async fn handle_p2sh_txproposal_get_my_signatures(
     params: ParamsP2shTxProposalGetMySignatures,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -1023,7 +1029,7 @@ pub async fn handle_p2sh_txproposal_get_my_signatures(
     )?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
-    map.insert("txHex", HashMapValue::String(params.tx_hex));
+    map.insert("txHex", params.tx_hex.into());
 
     let text_response = build_client(&params.config)?
         .post(url)
@@ -1044,7 +1050,7 @@ pub async fn handle_p2sh_txproposal_sign(
     let url = build_headless_url(&params.config.host, "/wallet/p2sh/tx-proposal/sign")?;
 
     let mut map: HashMap<&str, HashMapValue> = HashMap::new();
-    map.insert("txHex", HashMapValue::String(params.tx_hex));
+    map.insert("txHex", params.tx_hex.into());
     map.insert(
         "signatures",
         HashMapValue::List(
