@@ -702,44 +702,39 @@ pub async fn handle_utxo_filter(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let url = build_headless_url(&params.config.host, "/wallet/utxo-filter")?;
 
-    let mut map: HashMap<&str, HashMapValue> = HashMap::new();
+    let mut req_builder = build_client(&params.config)?
+        .get(url)
+        .header("X-Wallet-Id", params.wallet_id);
 
     if let Some(max_utxos) = params.max_utxos {
-        map.insert("max_utxos", max_utxos.into());
+        req_builder = req_builder.query(&[("max_utxos", max_utxos)]);
     }
 
     if let Some(token) = params.token {
-        map.insert("token", token.into());
+        req_builder = req_builder.query(&[("token", token)]);
     }
 
     if let Some(filter_address) = params.filter_address {
-        map.insert("filter_address", filter_address.into());
+        req_builder = req_builder.query(&[("filter_address", filter_address)]);
     }
 
     if let Some(amount_smaller_than) = params.amount_smaller_than {
-        map.insert("amount_smaller_than", amount_smaller_than.into());
+        req_builder = req_builder.query(&[("amount_smaller_than", amount_smaller_than)]);
     }
 
     if let Some(amount_bigger_than) = params.amount_bigger_than {
-        map.insert("amount_bigger_than", amount_bigger_than.into());
+        req_builder = req_builder.query(&[("amount_bigger_than", amount_bigger_than)]);
     }
 
     if let Some(maximum_amount) = params.maximum_amount {
-        map.insert("maximum_amount", maximum_amount.into());
+        req_builder = req_builder.query(&[("maximum_amount", maximum_amount)]);
     }
 
     if let Some(only_available_utxos) = params.only_available_utxos {
-        map.insert("only_available_utxos", only_available_utxos.into());
+        req_builder = req_builder.query(&[("only_available_utxos", only_available_utxos)]);
     }
 
-    let text_response = build_client(&params.config)?
-        .post(url)
-        .header("X-Wallet-Id", params.wallet_id)
-        .json(&map)
-        .send()
-        .await?
-        .text()
-        .await?;
+    let text_response = req_builder.send().await?.text().await?;
 
     println!("{}", text_response);
     Ok(())
